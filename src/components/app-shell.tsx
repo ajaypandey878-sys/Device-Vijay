@@ -24,7 +24,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6">
           <Link to="/dashboard" className="flex items-center gap-2 font-semibold">
@@ -32,10 +32,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             Smart Deck
           </Link>
           <button onClick={signOut} className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-secondary">
-            <LogOut className="h-4 w-4" /> Sign out
+            <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">Sign out</span>
           </button>
         </div>
-        <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-2 pb-2 md:px-4">
+      </header>
+
+      <main className="mx-auto max-w-3xl px-4 py-5 md:px-6">{children}</main>
+
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 backdrop-blur">
+        <div className="mx-auto grid max-w-3xl grid-cols-3">
           {nav.map(({ to, label, icon: Icon }) => {
             const active = pathname === to || pathname.startsWith(to + "/");
             return (
@@ -43,17 +48,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={to}
                 to={to}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium",
-                  active ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-secondary/60",
+                  "flex flex-col items-center gap-1 py-2.5 text-xs font-medium",
+                  active ? "text-primary" : "text-muted-foreground",
                 )}
               >
-                <Icon className="h-4 w-4" /> {label}
+                <Icon className={cn("h-5 w-5", active && "scale-110 transition")} />
+                {label}
               </Link>
             );
           })}
-        </nav>
-      </header>
-      <main className="mx-auto max-w-6xl px-4 py-6 md:px-6">{children}</main>
+        </div>
+      </nav>
     </div>
   );
 }
