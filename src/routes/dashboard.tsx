@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listMeals, getMealImageUrl } from "@/lib/meals.functions";
@@ -9,11 +9,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow, format } from "date-fns";
 import { Camera, Flame, Scale, Ruler } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
 
-export const Route = createFileRoute("/_authenticated/dashboard")({
+export const Route = createFileRoute("/dashboard")({
+  ssr: false,
+  beforeLoad: requireAuthBeforeLoad,
   head: () => ({ meta: [{ title: "Dashboard — Smart Deck" }] }),
-  component: Dashboard,
+  component: () => <AppShell><Dashboard /></AppShell>,
 });
 
 function Dashboard() {
@@ -24,7 +26,6 @@ function Dashboard() {
     queryFn: () => fetchMeals({ data: { sinceDays: 1, limit: 20 } }),
   });
 
-  // Realtime: refetch on new meal
   useEffect(() => {
     const channel = supabase
       .channel("meals-live")
@@ -138,33 +139,27 @@ function LiveMealCard({ meal }: { meal: any }) {
   const label = meal.corrected_label ?? meal.top_label ?? "Analyzing…";
   const weight = meal.corrected_weight_grams ?? meal.total_weight_grams;
   return (
-    <Card className="overflow-hidden">
-      <div className="grid md:grid-cols-[280px_1fr]">
-        <MealImage path={meal.image_path} />
-        <CardContent className="p-5">
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">{formatDistanceToNow(new Date(meal.captured_at), { addSuffix: true })}</Badge>
-            {meal.top_confidence != null && (
-              <Badge variant="outline">{Math.round(meal.top_confidence * 100)}% sure</Badge>
-            )}
-          </div>
-          <h3 className="mt-3 text-2xl font-semibold">{label}</h3>
-          <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
-            <Metric icon={Flame} label="Calories" value={meal.calories != null ? `${Math.round(meal.calories)} kcal` : "—"} />
-            <Metric icon={Scale} label="Weight" value={weight != null ? `${Math.round(Number(weight))} g` : "—"} />
-            <Metric icon={Ruler} label="Depth" value={meal.depth_mm != null ? `${Math.round(Number(meal.depth_mm))} mm` : "—"} />
-          </div>
-          {meal.nutrients && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {Object.entries(meal.nutrients as Record<string, number>).map(([k, v]) => (
-                <Badge key={k} variant="outline">{prettyKey(k)} {Math.round(v)}{k.endsWith("_mg") ? "mg" : "g"}</Badge>
-              ))}
+    <Link to="/meal/$id" params={{ id: meal.id }} className="block">
+      <Card className="overflow-hidden transition hover:shadow-md">
+        <div className="grid md:grid-cols-[280px_1fr]">
+          <MealImage path={meal.image_path} />
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">{formatDistanceToNow(new Date(meal.captured_at), { addSuffix: true })}</Badge>
+              {meal.top_confidence != null && (
+                <Badge variant="outline">{Math.round(meal.top_confidence * 100)}% sure</Badge>
+              )}
             </div>
-          )}
-          <Link to="/history" className="mt-5 inline-block text-sm text-primary hover:underline">Edit or correct →</Link>
-        </CardContent>
-      </div>
-    </Card>
+            <h3 className="mt-3 text-2xl font-semibold">{label}</h3>
+            <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
+              <Metric icon={Flame} label="Calories" value={meal.calories != null ? `${Math.round(meal.calories)} kcal` : "—"} />
+              <Metric icon={Scale} label="Weight" value={weight != null ? `${Math.round(Number(weight))} g` : "—"} />
+              <Metric icon={Ruler} label="Depth" value={meal.depth_mm != null ? `${Math.round(Number(meal.depth_mm))} mm` : "—"} />
+            </div>
+          </CardContent>
+        </div>
+      </Card>
+    </Link>
   );
 }
 
@@ -180,19 +175,17 @@ function Metric({ icon: Icon, label, value }: { icon: any; label: string; value:
 function MealMini({ meal }: { meal: any }) {
   const label = meal.corrected_label ?? meal.top_label ?? "Meal";
   return (
-    <Card className="overflow-hidden">
-      <MealImage path={meal.image_path} />
-      <CardContent className="p-3">
-        <div className="flex items-center justify-between">
-          <p className="truncate font-medium">{label}</p>
-          {meal.calories != null && <span className="text-sm text-muted-foreground">{Math.round(meal.calories)} kcal</span>}
-        </div>
-        <p className="mt-0.5 text-xs text-muted-foreground">{format(new Date(meal.captured_at), "p")}</p>
-      </CardContent>
-    </Card>
+    <Link to="/meal/$id" params={{ id: meal.id }}>
+      <Card className="overflow-hidden transition hover:shadow-md">
+        <MealImage path={meal.image_path} />
+        <CardContent className="p-3">
+          <div className="flex items-center justify-between">
+            <p className="truncate font-medium">{label}</p>
+            {meal.calories != null && <span className="text-sm text-muted-foreground">{Math.round(meal.calories)} kcal</span>}
+          </div>
+          <p className="mt-0.5 text-xs text-muted-foreground">{format(new Date(meal.captured_at), "p")}</p>
+        </CardContent>
+      </Card>
+    </Link>
   );
-}
-
-function prettyKey(k: string) {
-  return k.replace(/_g$|_mg$/, "").replace(/_/g, " ");
 }

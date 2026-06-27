@@ -22,6 +22,16 @@ export const listMeals = createServerFn({ method: "GET" })
     return rows ?? [];
   });
 
+export const getMeal = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase
+      .from("meals").select("*").eq("id", data.id).single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
+
 export const getMealImageUrl = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { path: string }) => z.object({ path: z.string().min(1) }).parse(input))

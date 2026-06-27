@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listDevices, createDevice, deleteDevice } from "@/lib/devices.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,13 +13,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Copy, Plus, Trash2, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
 
-export const Route = createFileRoute("/_authenticated/settings")({
-  head: () => ({ meta: [{ title: "Settings — Smart Deck" }] }),
-  component: Settings,
+export const Route = createFileRoute("/profile")({
+  ssr: false,
+  beforeLoad: requireAuthBeforeLoad,
+  head: () => ({ meta: [{ title: "Profile — Smart Deck" }] }),
+  component: () => <AppShell><Profile /></AppShell>,
 });
 
-function Settings() {
+function Profile() {
+  const [email, setEmail] = useState<string>("");
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
+  }, []);
+
   const fetchDevices = useServerFn(listDevices);
   const { data: devices, isLoading } = useQuery({
     queryKey: ["devices"],
@@ -28,9 +37,16 @@ function Settings() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-muted-foreground">Manage devices that send meals to your account.</p>
+        <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
+        <p className="text-sm text-muted-foreground">Your account and Smart Deck devices.</p>
       </div>
+
+      <Card><CardContent className="p-5">
+        <h2 className="font-semibold">Account</h2>
+        <div className="mt-3 text-sm">
+          <span className="text-muted-foreground">Email:</span> <span className="font-medium">{email || "—"}</span>
+        </div>
+      </CardContent></Card>
 
       <Card><CardContent className="p-5">
         <div className="mb-4 flex items-center justify-between">
@@ -48,23 +64,6 @@ function Settings() {
           )}
           {(devices ?? []).map((d) => <DeviceRow key={d.id} device={d} />)}
         </div>
-      </CardContent></Card>
-
-      <Card><CardContent className="p-5">
-        <h2 className="font-semibold">How your Pi uploads a meal</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Send a POST to <code className="rounded bg-secondary px-1.5 py-0.5">/api/public/ingest</code> with header
-          <code className="ml-1 rounded bg-secondary px-1.5 py-0.5">x-device-token: &lt;your token&gt;</code> and a JSON body:
-        </p>
-        <pre className="mt-3 overflow-x-auto rounded-lg bg-secondary p-3 text-xs">
-{`{
-  "weights": [w1, w2, w3, w4],   // grams from each HX711
-  "depth_mm": 47.2,              // ToF reading
-  "captured_at": "2026-06-27T15:00:00Z",
-  "image_base64": "<jpeg base64>",
-  "image_mime": "image/jpeg"
-}`}
-        </pre>
       </CardContent></Card>
     </div>
   );
@@ -87,7 +86,7 @@ function DeviceRow({ device }: { device: any }) {
           {device.last_seen_at ? ` • last seen ${formatDistanceToNow(new Date(device.last_seen_at), { addSuffix: true })}` : " • never connected"}
         </p>
       </div>
-      <Button size="sm" variant="ghost" onClick={() => { if (confirm("Remove this device? Its uploads will stop working.")) mutation.mutate(); }}>
+      <Button size="sm" variant="ghost" onClick={() => { if (confirm("Remove this device?")) mutation.mutate(); }}>
         <Trash2 className="h-4 w-4 text-destructive" />
       </Button>
     </div>

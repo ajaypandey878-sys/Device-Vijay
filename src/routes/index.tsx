@@ -23,8 +23,8 @@ function Landing() {
             Smart Deck
           </Link>
           <nav className="flex items-center gap-3 text-sm">
-            <Link to="/auth" className="text-muted-foreground hover:text-foreground">Sign in</Link>
-            <Link to="/auth" className="rounded-md bg-primary px-3 py-2 font-medium text-primary-foreground">Get started</Link>
+            <Link to="/login" className="text-muted-foreground hover:text-foreground">Sign in</Link>
+            <Link to="/login" className="rounded-md bg-primary px-3 py-2 font-medium text-primary-foreground">Get started</Link>
           </nav>
         </div>
       </header>
@@ -42,7 +42,7 @@ function Landing() {
             Every plate becomes a labeled meal with grams, calories, and nutrients — automatically.
           </p>
           <div className="mt-8 flex gap-3">
-            <Link to="/auth" className="rounded-md bg-primary px-5 py-3 text-sm font-medium text-primary-foreground">
+            <Link to="/login" className="rounded-md bg-primary px-5 py-3 text-sm font-medium text-primary-foreground">
               Open the dashboard
             </Link>
             <a href="#how" className="rounded-md border px-5 py-3 text-sm font-medium">

@@ -1,27 +1,17 @@
-import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, History, BarChart3, Settings, LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { LayoutDashboard, History, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-export const Route = createFileRoute("/_authenticated")({
-  ssr: false,
-  beforeLoad: async () => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
-    return { user: data.user };
-  },
-  component: AuthedLayout,
-});
+import type { ReactNode } from "react";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/history", label: "History", icon: History },
-  { to: "/nutrition", label: "Nutrition", icon: BarChart3 },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
-function AuthedLayout() {
+export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -30,7 +20,7 @@ function AuthedLayout() {
     await queryClient.cancelQueries();
     queryClient.clear();
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/login", replace: true });
   }
 
   return (
@@ -63,9 +53,16 @@ function AuthedLayout() {
           })}
         </nav>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-6 md:px-6">
-        <Outlet />
-      </main>
+      <main className="mx-auto max-w-6xl px-4 py-6 md:px-6">{children}</main>
     </div>
   );
+}
+
+export async function requireAuthBeforeLoad() {
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) {
+    const { redirect } = await import("@tanstack/react-router");
+    throw redirect({ to: "/login" });
+  }
+  return { user: data.user };
 }
