@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
-import { MealImage } from "./dashboard";
+import { MealImage } from "@/components/meal-image";
 
 export const Route = createFileRoute("/history")({
   ssr: false,

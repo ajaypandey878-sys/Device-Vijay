@@ -13,7 +13,7 @@ import { ArrowLeft, Flame, Scale, Ruler, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
-import { MealImage } from "./dashboard";
+import { MealImage } from "@/components/meal-image";
 
 export const Route = createFileRoute("/meal/$id")({
   ssr: false,
