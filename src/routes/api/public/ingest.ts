@@ -82,7 +82,7 @@ export const Route = createFileRoute("/api/public/ingest")({
         // Recognition (stub until LogMeal is wired)
         let top_label: string | null = null;
         let top_confidence: number | null = null;
-        let predictions: unknown = null;
+        let predictions: Array<{ label: string; confidence: number }> | null = null;
         let calories: number | null = null;
         let nutrients: Record<string, number> | null = null;
         let status: "processed" | "failed" = "processed";
