@@ -1,11 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Camera, Upload, Scale, Utensils, Flame, Activity, Gauge, Pencil, Save, ChevronRight } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Camera, Upload, Scale, Utensils, Flame, Activity, Gauge, Pencil, Save, ChevronRight, Loader2 } from "lucide-react";
 import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
-import { format } from "date-fns";
+import { saveMeal, listMeals } from "@/lib/meals.functions";
+import { format, formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
@@ -28,15 +33,29 @@ const MOCK_LIVE = {
   confidence: 92,
 };
 
-const MOCK_HISTORY = [
-  { id: "m1", label: "Paneer Bhurji + Roti", calories: 520, weight: 310, time: "12:45 PM", confidence: 88 },
-  { id: "m2", label: "Poha", calories: 280, weight: 180, time: "08:30 AM", confidence: 94 },
-  { id: "m3", label: "Chicken Curry + Rice", calories: 640, weight: 380, time: "Yesterday 9:10 PM", confidence: 91 },
-];
 
 function Dashboard() {
   const [meal] = useState(MOCK_LIVE);
   const totalWeight = meal.foods.reduce((s, f) => s + f.weight, 0);
+  const queryClient = useQueryClient();
+  const fetchMeals = useServerFn(listMeals);
+  const saveMealFn = useServerFn(saveMeal);
+
+  const { data: recent, isLoading: loadingRecent } = useQuery({
+    queryKey: ["meals", "recent"],
+    queryFn: () => fetchMeals({ data: { sinceDays: 30, limit: 5 } }),
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: () => saveMealFn({ data: meal }),
+    onSuccess: () => {
+      toast.success("Meal saved");
+      queryClient.invalidateQueries({ queryKey: ["meals"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Failed to save meal"),
+  });
+
+
 
   return (
     <div className="space-y-6">
@@ -140,8 +159,18 @@ function Dashboard() {
         <Button variant="outline" size="lg" className="h-12">
           <Pencil className="mr-2 h-4 w-4" /> Correct
         </Button>
-        <Button size="lg" className="h-12">
-          <Save className="mr-2 h-4 w-4" /> Save Meal
+        <Button
+          size="lg"
+          className="h-12"
+          onClick={() => saveMutation.mutate()}
+          disabled={saveMutation.isPending}
+        >
+          {saveMutation.isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
+          Save Meal
         </Button>
       </div>
 
@@ -154,20 +183,45 @@ function Dashboard() {
           </Link>
         </div>
         <div className="space-y-2">
-          {MOCK_HISTORY.map((m) => (
-            <Card key={m.id}>
-              <CardContent className="flex items-center gap-3 p-3">
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-secondary text-muted-foreground">
-                  <Utensils className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{m.label}</p>
-                  <p className="text-xs text-muted-foreground">{m.time} · {m.weight} g · {m.confidence}%</p>
-                </div>
-                <span className="shrink-0 text-sm font-semibold">{m.calories} kcal</span>
+          {loadingRecent ? (
+            <>
+              <Skeleton className="h-16 w-full rounded-lg" />
+              <Skeleton className="h-16 w-full rounded-lg" />
+            </>
+          ) : recent && recent.length > 0 ? (
+            recent.map((m: any) => {
+              const label = m.corrected_label ?? m.top_label ?? "Meal";
+              const weight = m.corrected_weight_grams ?? m.total_weight_grams;
+              return (
+                <Link key={m.id} to="/meal/$id" params={{ id: m.id }}>
+                  <Card>
+                    <CardContent className="flex items-center gap-3 p-3">
+                      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-secondary text-muted-foreground">
+                        <Utensils className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{label}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(m.captured_at), { addSuffix: true })}
+                          {weight != null && ` · ${Math.round(Number(weight))} g`}
+                          {m.top_confidence != null && ` · ${Math.round(m.top_confidence * 100)}%`}
+                        </p>
+                      </div>
+                      {m.calories != null && (
+                        <span className="shrink-0 text-sm font-semibold">{Math.round(m.calories)} kcal</span>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })
+          ) : (
+            <Card>
+              <CardContent className="p-6 text-center text-sm text-muted-foreground">
+                No meals yet. Tap <span className="font-medium">Save Meal</span> to log this one.
               </CardContent>
             </Card>
-          ))}
+          )}
         </div>
       </section>
     </div>
