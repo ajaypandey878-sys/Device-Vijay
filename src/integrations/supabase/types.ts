@@ -14,7 +14,169 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      devices: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen_at: string | null
+          name: string
+          token_hash: string
+          token_prefix: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string | null
+          name?: string
+          token_hash: string
+          token_prefix: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string | null
+          name?: string
+          token_hash?: string
+          token_prefix?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      meal_corrections: {
+        Row: {
+          corrected_label: string | null
+          corrected_weight_grams: number | null
+          created_at: string
+          id: string
+          meal_id: string
+          original_label: string | null
+          original_weight_grams: number | null
+          user_id: string
+        }
+        Insert: {
+          corrected_label?: string | null
+          corrected_weight_grams?: number | null
+          created_at?: string
+          id?: string
+          meal_id: string
+          original_label?: string | null
+          original_weight_grams?: number | null
+          user_id: string
+        }
+        Update: {
+          corrected_label?: string | null
+          corrected_weight_grams?: number | null
+          created_at?: string
+          id?: string
+          meal_id?: string
+          original_label?: string | null
+          original_weight_grams?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_corrections_meal_id_fkey"
+            columns: ["meal_id"]
+            isOneToOne: false
+            referencedRelation: "meals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meals: {
+        Row: {
+          calories: number | null
+          captured_at: string
+          corrected_label: string | null
+          corrected_weight_grams: number | null
+          created_at: string
+          depth_mm: number | null
+          device_id: string | null
+          error: string | null
+          id: string
+          image_path: string | null
+          nutrients: Json | null
+          predictions: Json | null
+          status: string
+          top_confidence: number | null
+          top_label: string | null
+          total_weight_grams: number | null
+          user_id: string
+          weights_grams: Json
+        }
+        Insert: {
+          calories?: number | null
+          captured_at?: string
+          corrected_label?: string | null
+          corrected_weight_grams?: number | null
+          created_at?: string
+          depth_mm?: number | null
+          device_id?: string | null
+          error?: string | null
+          id?: string
+          image_path?: string | null
+          nutrients?: Json | null
+          predictions?: Json | null
+          status?: string
+          top_confidence?: number | null
+          top_label?: string | null
+          total_weight_grams?: number | null
+          user_id: string
+          weights_grams?: Json
+        }
+        Update: {
+          calories?: number | null
+          captured_at?: string
+          corrected_label?: string | null
+          corrected_weight_grams?: number | null
+          created_at?: string
+          depth_mm?: number | null
+          device_id?: string | null
+          error?: string | null
+          id?: string
+          image_path?: string | null
+          nutrients?: Json | null
+          predictions?: Json | null
+          status?: string
+          top_confidence?: number | null
+          top_label?: string | null
+          total_weight_grams?: number | null
+          user_id?: string
+          weights_grams?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meals_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
