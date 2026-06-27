@@ -85,6 +85,47 @@ export type Database = {
           },
         ]
       }
+      meal_items: {
+        Row: {
+          calories: number | null
+          created_at: string
+          food_name: string
+          id: string
+          meal_id: string
+          position: number
+          user_id: string
+          weight_grams: number | null
+        }
+        Insert: {
+          calories?: number | null
+          created_at?: string
+          food_name: string
+          id?: string
+          meal_id: string
+          position?: number
+          user_id: string
+          weight_grams?: number | null
+        }
+        Update: {
+          calories?: number | null
+          created_at?: string
+          food_name?: string
+          id?: string
+          meal_id?: string
+          position?: number
+          user_id?: string
+          weight_grams?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_items_meal_id_fkey"
+            columns: ["meal_id"]
+            isOneToOne: false
+            referencedRelation: "meals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meals: {
         Row: {
           calories: number | null
