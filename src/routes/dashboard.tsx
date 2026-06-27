@@ -1,11 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Camera, Upload, Scale, Utensils, Flame, Activity, Gauge, Pencil, Save, ChevronRight } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Camera, Upload, Scale, Utensils, Flame, Activity, Gauge, Pencil, Save, ChevronRight, Loader2 } from "lucide-react";
 import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
-import { format } from "date-fns";
+import { saveMeal, listMeals } from "@/lib/meals.functions";
+import { format, formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
@@ -28,15 +33,30 @@ const MOCK_LIVE = {
   confidence: 92,
 };
 
-const MOCK_HISTORY = [
-  { id: "m1", label: "Paneer Bhurji + Roti", calories: 520, weight: 310, time: "12:45 PM", confidence: 88 },
-  { id: "m2", label: "Poha", calories: 280, weight: 180, time: "08:30 AM", confidence: 94 },
-  { id: "m3", label: "Chicken Curry + Rice", calories: 640, weight: 380, time: "Yesterday 9:10 PM", confidence: 91 },
-];
+const MOCK_HISTORY_EMPTY: never[] = [];
 
 function Dashboard() {
   const [meal] = useState(MOCK_LIVE);
   const totalWeight = meal.foods.reduce((s, f) => s + f.weight, 0);
+  const queryClient = useQueryClient();
+  const fetchMeals = useServerFn(listMeals);
+  const saveMealFn = useServerFn(saveMeal);
+
+  const { data: recent, isLoading: loadingRecent } = useQuery({
+    queryKey: ["meals", "recent"],
+    queryFn: () => fetchMeals({ data: { sinceDays: 30, limit: 5 } }),
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: () => saveMealFn({ data: meal }),
+    onSuccess: () => {
+      toast.success("Meal saved");
+      queryClient.invalidateQueries({ queryKey: ["meals"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Failed to save meal"),
+  });
+
+
 
   return (
     <div className="space-y-6">
