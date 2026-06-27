@@ -33,7 +33,6 @@ const MOCK_LIVE = {
   confidence: 92,
 };
 
-const MOCK_HISTORY_EMPTY: never[] = [];
 
 function Dashboard() {
   const [meal] = useState(MOCK_LIVE);
@@ -228,7 +227,6 @@ function Dashboard() {
     </div>
   );
 }
-void MOCK_HISTORY_EMPTY;
 
 function StatCard({ icon: Icon, label, value, unit, tint }: { icon: any; label: string; value: string; unit: string; tint: string }) {
   return (
