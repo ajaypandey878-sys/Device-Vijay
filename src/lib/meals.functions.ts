@@ -2,6 +2,74 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+const foodItemSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  weight: z.number().nonnegative().max(10000),
+  calories: z.number().nonnegative().max(20000),
+});
+
+export const saveMeal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: {
+    foods: { name: string; weight: number; calories: number }[];
+    total_calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+    confidence: number;
+    image_url?: string | null;
+  }) =>
+    z.object({
+      foods: z.array(foodItemSchema).min(1).max(20),
+      total_calories: z.number().nonnegative().max(50000),
+      protein: z.number().nonnegative().max(1000),
+      carbs: z.number().nonnegative().max(1000),
+      fats: z.number().nonnegative().max(1000),
+      confidence: z.number().min(0).max(100),
+      image_url: z.string().url().nullable().optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const totalWeight = data.foods.reduce((s, f) => s + f.weight, 0);
+    const topFood = [...data.foods].sort((a, b) => b.calories - a.calories)[0];
+    const topLabel = data.foods.map((f) => f.name).join(" + ");
+
+    const { data: meal, error } = await context.supabase
+      .from("meals")
+      .insert({
+        user_id: context.userId,
+        image_path: data.image_url ?? null,
+        weights_grams: data.foods.map((f) => f.weight),
+        total_weight_grams: totalWeight,
+        top_label: topLabel,
+        top_confidence: data.confidence / 100,
+        calories: data.total_calories,
+        nutrients: {
+          protein_g: data.protein,
+          carbs_g: data.carbs,
+          fat_g: data.fats,
+        },
+        predictions: { foods: data.foods, top: topFood?.name ?? null },
+        status: "processed",
+      })
+      .select("id")
+      .single();
+    if (error || !meal) throw new Error(error?.message ?? "Failed to save meal");
+
+    const items = data.foods.map((f, i) => ({
+      meal_id: meal.id,
+      user_id: context.userId,
+      food_name: f.name,
+      weight_grams: f.weight,
+      calories: f.calories,
+      position: i,
+    }));
+    const { error: itemsErr } = await context.supabase.from("meal_items").insert(items);
+    if (itemsErr) throw new Error(itemsErr.message);
+
+    return { id: meal.id };
+  });
+
 export const listMeals = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { sinceDays?: number; limit?: number }) =>
