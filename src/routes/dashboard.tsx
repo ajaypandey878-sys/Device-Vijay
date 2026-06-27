@@ -1,25 +1,40 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Camera, Upload, Scale, Utensils, Flame, Activity, Gauge, Pencil, Save, ChevronRight, Loader2 } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Camera,
+  Upload,
+  Pencil,
+  Save,
+  ChevronDown,
+  Loader2,
+  ImageIcon,
+} from "lucide-react";
 import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
-import { saveMeal, listMeals } from "@/lib/meals.functions";
-import { format, formatDistanceToNow } from "date-fns";
+import { saveMeal } from "@/lib/meals.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
   beforeLoad: requireAuthBeforeLoad,
   head: () => ({ meta: [{ title: "Dashboard — Smart Deck" }] }),
-  component: () => <AppShell><Dashboard /></AppShell>,
+  component: () => (
+    <AppShell>
+      <Dashboard />
+    </AppShell>
+  ),
 });
 
-// ---- Mock data ----
 const MOCK_LIVE = {
   foods: [
     { name: "Rice", weight: 120, calories: 160 },
@@ -33,228 +48,262 @@ const MOCK_LIVE = {
   confidence: 92,
 };
 
+const DAILY_GOAL = 2000;
 
 function Dashboard() {
-  const [meal] = useState(MOCK_LIVE);
-  const totalWeight = meal.foods.reduce((s, f) => s + f.weight, 0);
+  const [meal, setMeal] = useState<typeof MOCK_LIVE | null>(null);
+  const [greeting, setGreeting] = useState("Hello");
+  const [name, setName] = useState("");
   const queryClient = useQueryClient();
-  const fetchMeals = useServerFn(listMeals);
   const saveMealFn = useServerFn(saveMeal);
 
-  const { data: recent, isLoading: loadingRecent } = useQuery({
-    queryKey: ["meals", "recent"],
-    queryFn: () => fetchMeals({ data: { sinceDays: 30, limit: 5 } }),
-  });
+  useEffect(() => {
+    const h = new Date().getHours();
+    setGreeting(h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening");
+    supabase.auth.getUser().then(({ data }) => {
+      const n =
+        (data.user?.user_metadata?.full_name as string) ??
+        (data.user?.user_metadata?.name as string) ??
+        data.user?.email?.split("@")[0] ??
+        "";
+      setName(n);
+    });
+  }, []);
 
   const saveMutation = useMutation({
-    mutationFn: () => saveMealFn({ data: meal }),
+    mutationFn: () => saveMealFn({ data: meal! }),
     onSuccess: () => {
       toast.success("Meal saved");
       queryClient.invalidateQueries({ queryKey: ["meals"] });
+      setMeal(null);
     },
     onError: (e: any) => toast.error(e?.message ?? "Failed to save meal"),
   });
 
+  const processMock = () => setMeal(MOCK_LIVE);
 
+  const totalWeight = meal?.foods.reduce((s, f) => s + f.weight, 0) ?? 0;
+  const consumed = meal?.total_calories ?? 0;
+  const ringPct = Math.min(100, (consumed / DAILY_GOAL) * 100);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">{format(new Date(), "EEEE, MMM d")}</p>
-        <h1 className="text-2xl font-bold tracking-tight">Live Meal Capture</h1>
-      </div>
+    <div className="space-y-8 pb-4">
+      {/* Greeting + Calorie ring */}
+      <header className="space-y-6">
+        <div>
+          <p className="text-sm text-muted-foreground">
+            {format(new Date(), "EEEE, MMMM d")}
+          </p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">
+            {greeting}
+            {name ? `, ${name.split(" ")[0]}` : ""}
+          </h1>
+        </div>
 
-      {/* Capture actions */}
-      <div className="grid grid-cols-2 gap-3">
-        <Button size="lg" className="h-20 flex-col gap-1.5">
-          <Camera className="h-5 w-5" />
-          <span className="text-sm font-semibold">Capture</span>
-        </Button>
-        <Button size="lg" variant="secondary" className="h-20 flex-col gap-1.5">
-          <Upload className="h-5 w-5" />
-          <span className="text-sm font-semibold">Upload Image</span>
-        </Button>
-      </div>
+        <div className="flex justify-center">
+          <CalorieRing pct={ringPct} consumed={consumed} goal={DAILY_GOAL} />
+        </div>
+      </header>
 
-      {/* Preview placeholder */}
-      <Card className="overflow-hidden">
-        <div className="grid aspect-video place-items-center bg-secondary text-muted-foreground">
-          <div className="flex flex-col items-center gap-2">
-            <Camera className="h-8 w-8" />
-            <p className="text-sm">Mock preview — capture to see image</p>
-          </div>
+      {/* Live meal preview */}
+      <Card className="overflow-hidden rounded-3xl border-0 shadow-[0_8px_30px_-12px_rgba(16,80,40,0.15)]">
+        <div className="grid aspect-[4/3] place-items-center bg-gradient-to-br from-secondary/60 to-muted">
+          {meal ? (
+            <div className="flex flex-col items-center gap-2 text-muted-foreground">
+              <ImageIcon className="h-10 w-10" />
+              <p className="text-sm">Live meal preview</p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3 text-muted-foreground">
+              <div className="grid h-16 w-16 place-items-center rounded-full bg-background/70 shadow-sm">
+                <Camera className="h-7 w-7" />
+              </div>
+              <p className="text-sm">Capture or upload to begin</p>
+            </div>
+          )}
         </div>
       </Card>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard
-          icon={Scale}
-          label="Total Weight"
-          value={`${totalWeight}`}
-          unit="g"
-          tint="bg-blue-500/10 text-blue-600"
-        />
-        <StatCard
-          icon={Flame}
-          label="Calories"
-          value={`${meal.total_calories}`}
-          unit="kcal"
-          tint="bg-orange-500/10 text-orange-600"
-        />
-        <StatCard
-          icon={Utensils}
-          label="Detected Foods"
-          value={`${meal.foods.length}`}
-          unit="items"
-          tint="bg-emerald-500/10 text-emerald-600"
-        />
-        <StatCard
-          icon={Gauge}
-          label="Confidence"
-          value={`${meal.confidence}`}
-          unit="%"
-          tint="bg-violet-500/10 text-violet-600"
-        />
-      </div>
-
-      {/* Food detection */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-semibold">Food Detection</h2>
-            <Badge variant="secondary" className="gap-1">
-              <Activity className="h-3 w-3" /> Mock
-            </Badge>
-          </div>
-          <ul className="divide-y">
-            {meal.foods.map((f) => (
-              <li key={f.name} className="flex items-center justify-between py-3">
-                <div>
-                  <p className="font-medium">{f.name}</p>
-                  <p className="text-xs text-muted-foreground">{f.weight} g</p>
-                </div>
-                <span className="text-sm font-semibold">{f.calories} kcal</span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* Macros */}
-      <Card>
-        <CardContent className="p-4">
-          <h2 className="mb-3 text-base font-semibold">Macros</h2>
-          <div className="grid grid-cols-3 gap-3">
-            <Macro label="Protein" value={meal.protein} color="bg-rose-500" />
-            <Macro label="Carbs" value={meal.carbs} color="bg-amber-500" />
-            <Macro label="Fats" value={meal.fats} color="bg-sky-500" />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Actions */}
-      <div className="grid grid-cols-2 gap-3">
-        <Button variant="outline" size="lg" className="h-12">
-          <Pencil className="mr-2 h-4 w-4" /> Correct
+      {/* Capture / Upload */}
+      <div className="grid grid-cols-2 gap-4">
+        <Button
+          size="lg"
+          onClick={processMock}
+          className="h-20 flex-col gap-1.5 rounded-2xl text-base shadow-[0_8px_24px_-10px_rgba(40,120,70,0.45)]"
+        >
+          <Camera className="h-6 w-6" />
+          <span className="font-medium">Capture Meal</span>
         </Button>
         <Button
           size="lg"
-          className="h-12"
-          onClick={() => saveMutation.mutate()}
-          disabled={saveMutation.isPending}
+          variant="secondary"
+          onClick={processMock}
+          className="h-20 flex-col gap-1.5 rounded-2xl text-base"
         >
-          {saveMutation.isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="mr-2 h-4 w-4" />
-          )}
-          Save Meal
+          <Upload className="h-6 w-6" />
+          <span className="font-medium">Upload Meal</span>
         </Button>
       </div>
 
-      {/* History */}
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold">Meal History</h2>
-          <Link to="/history" className="inline-flex items-center text-xs font-medium text-muted-foreground hover:text-foreground">
-            View all <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-        <div className="space-y-2">
-          {loadingRecent ? (
-            <>
-              <Skeleton className="h-16 w-full rounded-lg" />
-              <Skeleton className="h-16 w-full rounded-lg" />
-            </>
-          ) : recent && recent.length > 0 ? (
-            recent.map((m: any) => {
-              const label = m.corrected_label ?? m.top_label ?? "Meal";
-              const weight = m.corrected_weight_grams ?? m.total_weight_grams;
-              return (
-                <Link key={m.id} to="/meal/$id" params={{ id: m.id }}>
-                  <Card>
-                    <CardContent className="flex items-center gap-3 p-3">
-                      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-secondary text-muted-foreground">
-                        <Utensils className="h-5 w-5" />
+      {/* Meal result */}
+      {meal && (
+        <div className="space-y-5">
+          {/* Summary */}
+          <Card className="rounded-3xl border-0 shadow-[0_8px_30px_-15px_rgba(16,80,40,0.18)]">
+            <CardContent className="grid grid-cols-3 gap-2 p-6">
+              <Summary label="Weight" value={`${totalWeight}`} unit="g" />
+              <Summary label="Calories" value={`${meal.total_calories}`} unit="kcal" />
+              <Summary label="Confidence" value={`${meal.confidence}`} unit="%" />
+            </CardContent>
+          </Card>
+
+          {/* Detected foods (collapsible) */}
+          <Collapsible defaultOpen>
+            <Card className="rounded-3xl border-0 shadow-[0_8px_30px_-15px_rgba(16,80,40,0.12)]">
+              <CollapsibleTrigger className="group flex w-full items-center justify-between p-5">
+                <div className="text-left">
+                  <p className="text-base font-medium">Detected foods</p>
+                  <p className="text-xs text-muted-foreground">
+                    {meal.foods.length} items
+                  </p>
+                </div>
+                <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <ul className="space-y-1 px-5 pb-5">
+                  {meal.foods.map((f) => (
+                    <li
+                      key={f.name}
+                      className="flex items-center justify-between rounded-2xl bg-secondary/50 px-4 py-3"
+                    >
+                      <div>
+                        <p className="font-medium">{f.name}</p>
+                        <p className="text-xs text-muted-foreground">{f.weight} g</p>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{label}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(m.captured_at), { addSuffix: true })}
-                          {weight != null && ` · ${Math.round(Number(weight))} g`}
-                          {m.top_confidence != null && ` · ${Math.round(m.top_confidence * 100)}%`}
-                        </p>
-                      </div>
-                      {m.calories != null && (
-                        <span className="shrink-0 text-sm font-semibold">{Math.round(m.calories)} kcal</span>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })
-          ) : (
-            <Card>
-              <CardContent className="p-6 text-center text-sm text-muted-foreground">
-                No meals yet. Tap <span className="font-medium">Save Meal</span> to log this one.
-              </CardContent>
+                      <span className="text-sm font-semibold">{f.calories} kcal</span>
+                    </li>
+                  ))}
+                </ul>
+              </CollapsibleContent>
             </Card>
-          )}
+          </Collapsible>
+
+          {/* Macros */}
+          <Card className="rounded-3xl border-0 shadow-[0_8px_30px_-15px_rgba(16,80,40,0.12)]">
+            <CardContent className="space-y-5 p-6">
+              <p className="text-base font-medium">Macros</p>
+              <Macro label="Protein" value={meal.protein} goal={80} />
+              <Macro label="Carbs" value={meal.carbs} goal={250} />
+              <Macro label="Fats" value={meal.fats} goal={70} />
+            </CardContent>
+          </Card>
+
+          {/* Actions */}
+          <div className="grid grid-cols-2 gap-4 pt-2">
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-14 rounded-2xl border-2 text-base"
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              Correct
+            </Button>
+            <Button
+              size="lg"
+              onClick={() => saveMutation.mutate()}
+              disabled={saveMutation.isPending}
+              className="h-14 rounded-2xl text-base shadow-[0_8px_24px_-10px_rgba(40,120,70,0.45)]"
+            >
+              {saveMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              Save Meal
+            </Button>
+          </div>
         </div>
-      </section>
+      )}
     </div>
   );
 }
 
-function StatCard({ icon: Icon, label, value, unit, tint }: { icon: any; label: string; value: string; unit: string; tint: string }) {
+function CalorieRing({
+  pct,
+  consumed,
+  goal,
+}: {
+  pct: number;
+  consumed: number;
+  goal: number;
+}) {
+  const size = 220;
+  const stroke = 16;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c - (pct / 100) * c;
+
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className={`mb-2 inline-grid h-8 w-8 place-items-center rounded-lg ${tint}`}>
-          <Icon className="h-4 w-4" />
-        </div>
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="mt-0.5 text-xl font-bold">
-          {value}
-          <span className="ml-1 text-xs font-normal text-muted-foreground">{unit}</span>
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          stroke="var(--secondary)"
+          strokeWidth={stroke}
+          fill="none"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          stroke="var(--primary)"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={offset}
+          fill="none"
+          className="transition-[stroke-dashoffset] duration-700"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <p className="text-4xl font-semibold tracking-tight">{consumed}</p>
+        <p className="text-xs uppercase tracking-wider text-muted-foreground">
+          of {goal} kcal
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
-function Macro({ label, value, color }: { label: string; value: number; color: string }) {
-  const pct = Math.min(100, value * 2);
+function Summary({ label, value, unit }: { label: string; value: string; unit: string }) {
+  return (
+    <div className="text-center">
+      <p className="text-2xl font-semibold tracking-tight">
+        {value}
+        <span className="ml-0.5 text-sm font-normal text-muted-foreground">{unit}</span>
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
+function Macro({ label, value, goal }: { label: string; value: number; goal: number }) {
+  const pct = Math.min(100, (value / goal) * 100);
   return (
     <div>
-      <div className="flex items-baseline justify-between">
-        <span className="text-xs text-muted-foreground">{label}</span>
-        <span className="text-sm font-semibold">{value}g</span>
+      <div className="mb-2 flex items-baseline justify-between">
+        <span className="text-sm font-medium">{label}</span>
+        <span className="text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">{value}g</span> / {goal}g
+        </span>
       </div>
-      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-secondary">
-        <div className={`h-full ${color}`} style={{ width: `${pct}%` }} />
+      <div className="h-2 overflow-hidden rounded-full bg-secondary">
+        <div
+          className="h-full rounded-full bg-primary transition-[width] duration-500"
+          style={{ width: `${pct}%` }}
+        />
       </div>
     </div>
   );
