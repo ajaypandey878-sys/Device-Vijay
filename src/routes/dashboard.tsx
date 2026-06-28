@@ -365,14 +365,14 @@ function Macro({
   };
 
   return (
-    <div className="space-y-0.5">
+    <div className="space-y-1">
       <div className="flex items-baseline justify-between leading-none">
-        <span className="text-[10px] font-semibold">{label}</span>
+        <span className="text-xs font-semibold">{label}</span>
         <span className="text-[10px] text-muted-foreground">
           <span className={`font-semibold ${textMap[color]}`}>{value}g</span> / {goal}g
         </span>
       </div>
-      <div className="h-1 overflow-hidden rounded-full bg-secondary">
+      <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
         <div
           className={`h-full rounded-full ${colorMap[color]} transition-[width] duration-500`}
           style={{ width: `${pct}%` }}
