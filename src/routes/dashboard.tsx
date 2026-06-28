@@ -372,7 +372,7 @@ function Macro({
           <span className={`font-semibold ${textMap[color]}`}>{value}g</span> / {goal}g
         </span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
+      <div className="h-1 overflow-hidden rounded-full bg-secondary">
         <div
           className={`h-full rounded-full ${colorMap[color]} transition-[width] duration-500`}
           style={{ width: `${pct}%` }}
