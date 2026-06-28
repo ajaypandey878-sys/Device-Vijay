@@ -36,6 +36,8 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 const MOCK_LIVE = {
+  image_url:
+    "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80&auto=format&fit=crop",
   foods: [
     { name: "Rice", weight: 120, calories: 160 },
     { name: "Dal", weight: 80, calories: 110 },
