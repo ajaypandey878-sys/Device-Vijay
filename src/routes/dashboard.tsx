@@ -51,6 +51,49 @@ const MOCK_LIVE = {
 
 const DAILY_GOAL = 2000;
 
+const WEIGHT_API_URL =
+  (typeof window !== "undefined" && window.localStorage.getItem("ashoma.weight_api_url")) ||
+  (import.meta.env.VITE_WEIGHT_API_URL as string | undefined) ||
+  "";
+
+function useLiveWeight() {
+  const [weight, setWeight] = useState<number | null>(null);
+  const [status, setStatus] = useState<"waiting" | "live" | "error">("waiting");
+
+  useEffect(() => {
+    if (!WEIGHT_API_URL) {
+      setStatus("waiting");
+      return;
+    }
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const res = await fetch(WEIGHT_API_URL, { cache: "no-store" });
+        if (!res.ok) throw new Error("bad status");
+        const data = (await res.json()) as { weight?: number; grams?: number; value?: number };
+        const g = data.weight ?? data.grams ?? data.value;
+        if (cancelled) return;
+        if (typeof g === "number" && Number.isFinite(g)) {
+          setWeight(Math.round(g));
+          setStatus("live");
+        } else {
+          setStatus("error");
+        }
+      } catch {
+        if (!cancelled) setStatus("error");
+      }
+    };
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, []);
+
+  return { weight, status };
+}
+
 function Dashboard() {
   const [meal, setMeal] = useState<typeof MOCK_LIVE | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -96,7 +139,16 @@ function Dashboard() {
 
   const previewSrc = meal?.image_url ?? capturedImage;
 
+  const { weight: liveWeight, status: weightStatus } = useLiveWeight();
   const totalWeight = meal?.foods.reduce((s, f) => s + f.weight, 0) ?? 0;
+  const weightDisplay: { value: number | string; unit: string } =
+    totalWeight > 0
+      ? { value: totalWeight, unit: "g" }
+      : weightStatus === "live" && liveWeight !== null
+        ? { value: liveWeight, unit: "g" }
+        : weightStatus === "error"
+          ? { value: "Disconnected", unit: "" }
+          : { value: "Waiting...", unit: "" };
   const consumed = meal?.total_calories ?? 0;
   const ringPct = Math.min(100, (consumed / DAILY_GOAL) * 100);
   const confidence = meal?.confidence ?? 0;
@@ -149,7 +201,7 @@ function Dashboard() {
 
       {/* Glassmorphic stat cards */}
       <div className="grid grid-cols-3 gap-3">
-        <StatCard icon={Scale} label="Weight" value={totalWeight} unit="g" tone="primary" />
+        <StatCard icon={Scale} label="Weight" value={weightDisplay.value} unit={weightDisplay.unit} tone="primary" />
         <StatCard icon={Flame} label="Calories" value={consumed} unit="kcal" tone="accent" />
         <StatCard icon={Gauge} label="Confidence" value={confidence} unit="%" tone="sky" />
       </div>
@@ -346,7 +398,7 @@ function StatCard({
 }: {
   icon: React.ElementType;
   label: string;
-  value: number;
+  value: number | string;
   unit: string;
   tone: "primary" | "accent" | "sky";
 }) {
