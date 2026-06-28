@@ -84,6 +84,17 @@ function Dashboard() {
 
   const processMock = () => setMeal(MOCK_LIVE);
 
+  const handleFile = (file: File | null | undefined) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") setCapturedImage(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const previewSrc = meal?.image_url ?? capturedImage;
+
   const totalWeight = meal?.foods.reduce((s, f) => s + f.weight, 0) ?? 0;
   const consumed = meal?.total_calories ?? 0;
   const ringPct = Math.min(100, (consumed / DAILY_GOAL) * 100);
