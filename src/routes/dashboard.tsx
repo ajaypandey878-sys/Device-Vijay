@@ -199,7 +199,7 @@ function Dashboard() {
 
           {/* Colorful macro bars */}
           <Card className="rounded-[1.75rem] border-0 shadow-[0_8px_30px_-12px_rgba(16,80,40,0.12)]" data-testid="macro-bars">
-            <CardContent className="space-y-0.5 p-2">
+            <CardContent className="space-y-0.5 p-1.5">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Macros
               </p>
