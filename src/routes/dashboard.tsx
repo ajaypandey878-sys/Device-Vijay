@@ -172,7 +172,8 @@ function Dashboard() {
   }, []);
 
   const estimateMutation = useMutation({
-    mutationFn: (image: string) => estimateWeightFn({ data: { image } }),
+    mutationFn: (image: string) =>
+      estimateWeightFn({ data: { image } }) as Promise<{ grams: number | null }>,
     onSuccess: (res) => {
       if (res.grams != null) {
         setEstimatedWeight(res.grams);
