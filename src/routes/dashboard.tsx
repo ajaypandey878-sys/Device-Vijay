@@ -77,6 +77,7 @@ function Dashboard() {
       toast.success("Meal saved");
       queryClient.invalidateQueries({ queryKey: ["meals"] });
       setMeal(null);
+      setCapturedImage(null);
     },
     onError: (e: { message?: string }) =>
       toast.error(e?.message ?? "Failed to save meal"),
