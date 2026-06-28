@@ -26,7 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
   beforeLoad: requireAuthBeforeLoad,
-  head: () => ({ meta: [{ title: "Dashboard — Smart Deck" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — AshoMa" }] }),
   component: () => (
     <AppShell>
       <Dashboard />

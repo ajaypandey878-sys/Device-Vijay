@@ -12,7 +12,7 @@ import { MealImage } from "@/components/meal-image";
 export const Route = createFileRoute("/history")({
   ssr: false,
   beforeLoad: requireAuthBeforeLoad,
-  head: () => ({ meta: [{ title: "History — Smart Deck" }] }),
+  head: () => ({ meta: [{ title: "History — AshoMa" }] }),
   component: () => <AppShell><History /></AppShell>,
 });
 

@@ -28,8 +28,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6">
           <Link to="/dashboard" className="flex items-center gap-2 font-semibold">
-            <span className="grid h-7 w-7 place-items-center rounded-md bg-primary text-primary-foreground text-xs">SD</span>
-            Smart Deck
+            <span className="grid h-7 w-7 place-items-center rounded-md bg-primary text-primary-foreground text-xs">AM</span>
+            AshoMa
           </Link>
           <button onClick={signOut} className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-secondary">
             <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">Sign out</span>
