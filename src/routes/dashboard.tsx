@@ -15,6 +15,10 @@ import {
   Scale,
   Flame,
   Gauge,
+  UtensilsCrossed,
+  Dumbbell,
+  Wheat,
+  Droplets,
 } from "lucide-react";
 import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
 import { saveMeal } from "@/lib/meals.functions";
@@ -110,15 +114,22 @@ function Dashboard() {
       {/* Live meal preview card */}
       <Card className="overflow-hidden rounded-[1.75rem] border-0 shadow-[0_12px_40px_-12px_rgba(16,80,40,0.16)]">
         <div
-          className="grid w-full place-items-center bg-gradient-to-br from-secondary/70 via-muted/50 to-secondary/30"
+          className="relative grid w-full place-items-center bg-gradient-to-br from-secondary/70 via-muted/50 to-secondary/30"
           style={{ height: 240 }}
         >
           {meal ? (
             <div className="flex flex-col items-center gap-2 text-muted-foreground">
-              <div className="grid h-16 w-16 place-items-center rounded-full bg-background/90 shadow-sm">
-                <ImageIcon className="h-7 w-7" />
+              <div className="grid h-20 w-20 place-items-center rounded-full bg-background/90 shadow-[0_8px_24px_-8px_rgba(16,80,40,0.18)]">
+                <UtensilsCrossed className="h-9 w-9 text-primary" />
               </div>
               <p className="text-sm font-medium">Live meal preview</p>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                </span>
+                Active
+              </span>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3 text-muted-foreground">
@@ -156,29 +167,63 @@ function Dashboard() {
 
       {/* Active meal results */}
       {meal && (
-        <div className="space-y-1.5">
-          {/* Calorie ring below preview */}
-          <div className="flex justify-center">
+        <div className="space-y-2">
+          {/* Green calorie ring below preview */}
+          <div className="flex flex-col items-center justify-center gap-1">
             <CalorieRing
               pct={ringPct}
               consumed={consumed}
               goal={DAILY_GOAL}
             />
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Daily intake
+            </p>
           </div>
 
           {/* Detected food cards */}
-          <div className="grid grid-cols-3 gap-1.5">
-            {meal.foods.map((food, i) => (
-              <FoodCard key={food.name} food={food} index={i} />
-            ))}
-          </div>
-
-          {/* Compact macro bars */}
           <Card className="rounded-[1.75rem] border-0 shadow-[0_8px_30px_-12px_rgba(16,80,40,0.12)]">
-            <CardContent className="space-y-1 p-2">
-              <Macro label="Protein" value={meal.protein} goal={80} color="protein" />
-              <Macro label="Carbs" value={meal.carbs} goal={250} color="carbs" />
-              <Macro label="Fats" value={meal.fats} goal={70} color="fats" />
+            <CardContent className="space-y-2 p-3">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Detected foods
+                </p>
+                <span className="text-[10px] text-muted-foreground">{meal.foods.length} items</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {meal.foods.map((food, i) => (
+                  <FoodCard key={food.name} food={food} index={i} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Colorful macro bars */}
+          <Card className="rounded-[1.75rem] border-0 shadow-[0_8px_30px_-12px_rgba(16,80,40,0.12)]">
+            <CardContent className="space-y-2 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Macros
+              </p>
+              <Macro
+                label="Protein"
+                value={meal.protein}
+                goal={80}
+                color="protein"
+                icon={Dumbbell}
+              />
+              <Macro
+                label="Carbs"
+                value={meal.carbs}
+                goal={250}
+                color="carbs"
+                icon={Wheat}
+              />
+              <Macro
+                label="Fats"
+                value={meal.fats}
+                goal={70}
+                color="fats"
+                icon={Droplets}
+              />
             </CardContent>
           </Card>
         </div>
@@ -191,7 +236,7 @@ function Dashboard() {
             <Button
               variant="outline"
               size="lg"
-              className="h-12 rounded-xl border-2 border-primary/30 bg-background text-foreground hover:bg-muted hover:text-foreground"
+              className="h-13 rounded-xl border-2 border-primary/30 bg-background text-foreground hover:bg-muted hover:text-foreground"
             >
               <Pencil className="mr-2 h-4 w-4" />
               Correct
@@ -200,7 +245,7 @@ function Dashboard() {
               size="lg"
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending}
-              className="h-12 rounded-xl text-sm font-semibold shadow-[0_8px_24px_-10px_rgba(40,120,70,0.4)]"
+              className="h-13 rounded-xl text-sm font-semibold shadow-[0_8px_24px_-10px_rgba(40,120,70,0.4)]"
             >
               {saveMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -312,12 +357,12 @@ function StatCard({
   );
 }
 
-const FOOD_THUMBNAILS = [
-  "bg-chart-1/10 text-chart-1",
-  "bg-chart-2/10 text-chart-2",
-  "bg-chart-3/10 text-chart-3",
-  "bg-chart-4/10 text-chart-4",
-  "bg-chart-5/10 text-chart-5",
+const FOOD_TONES = [
+  "bg-emerald-100 text-emerald-700",
+  "bg-amber-100 text-amber-700",
+  "bg-rose-100 text-rose-700",
+  "bg-sky-100 text-sky-700",
+  "bg-violet-100 text-violet-700",
 ];
 
 function FoodCard({
@@ -327,11 +372,11 @@ function FoodCard({
   food: { name: string; weight: number; calories: number };
   index: number;
 }) {
-  const tone = FOOD_THUMBNAILS[index % FOOD_THUMBNAILS.length];
+  const tone = FOOD_TONES[index % FOOD_TONES.length];
   return (
-    <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary/50 p-2 text-center shadow-sm">
-      <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${tone}`}>
-        <span className="text-sm font-semibold">{food.name.charAt(0)}</span>
+    <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-secondary/50 p-2.5 text-center shadow-sm">
+      <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${tone}`}>
+        <UtensilsCrossed className="h-5 w-5" />
       </div>
       <div className="min-w-0">
         <p className="truncate text-xs font-semibold leading-tight">{food.name}</p>
@@ -346,11 +391,13 @@ function Macro({
   value,
   goal,
   color,
+  icon: Icon,
 }: {
   label: string;
   value: number;
   goal: number;
   color: "protein" | "carbs" | "fats";
+  icon: React.ElementType;
 }) {
   const pct = Math.min(100, (value / goal) * 100);
   const colorMap = {
@@ -363,11 +410,21 @@ function Macro({
     carbs: "text-macro-carbs",
     fats: "text-macro-fats",
   };
+  const bgTone = {
+    protein: "bg-macro-protein/10",
+    carbs: "bg-macro-carbs/10",
+    fats: "bg-macro-fats/10",
+  };
 
   return (
     <div className="space-y-1">
-      <div className="flex items-baseline justify-between leading-none">
-        <span className="text-xs font-semibold">{label}</span>
+      <div className="flex items-center justify-between leading-none">
+        <div className="flex items-center gap-1.5">
+          <div className={`grid h-5 w-5 place-items-center rounded-md ${bgTone[color]} ${textMap[color]}`}>
+            <Icon className="h-3 w-3" />
+          </div>
+          <span className="text-xs font-semibold">{label}</span>
+        </div>
         <span className="text-[10px] text-muted-foreground">
           <span className={`font-semibold ${textMap[color]}`}>{value}g</span> / {goal}g
         </span>
