@@ -266,7 +266,7 @@ function CalorieRing({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <p className="text-2xl font-semibold tracking-tight">{consumed}</p>
+        <p className="text-xl font-semibold tracking-tight">{consumed}</p>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           of {goal} kcal
         </p>
