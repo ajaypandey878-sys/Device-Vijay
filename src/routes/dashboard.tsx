@@ -90,7 +90,7 @@ function Dashboard() {
   const ringPct = Math.min(100, (consumed / DAILY_GOAL) * 100);
 
   return (
-    <div className={`space-y-6 pb-8 ${meal ? "pb-36" : ""}`}>
+    <div className={`space-y-6 pb-8 ${meal ? "pb-40" : ""}`}>
       {/* Greeting + Calorie ring */}
       <header className="space-y-4">
         <div>
