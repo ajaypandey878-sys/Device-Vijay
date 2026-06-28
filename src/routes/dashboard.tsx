@@ -175,7 +175,7 @@ function Dashboard() {
 
           {/* Compact macro bars */}
           <Card className="rounded-[1.75rem] border-0 shadow-[0_8px_30px_-12px_rgba(16,80,40,0.12)]">
-            <CardContent className="space-y-2 p-3">
+            <CardContent className="space-y-1 p-2">
               <Macro label="Protein" value={meal.protein} goal={80} color="protein" />
               <Macro label="Carbs" value={meal.carbs} goal={250} color="carbs" />
               <Macro label="Fats" value={meal.fats} goal={70} color="fats" />
