@@ -59,6 +59,11 @@ const WEIGHT_API_URL =
   (import.meta.env.VITE_WEIGHT_API_URL as string | undefined) ||
   "";
 
+const IMAGE_API_URL =
+  (typeof window !== "undefined" && window.localStorage.getItem("ashoma.image_api_url")) ||
+  (import.meta.env.VITE_IMAGE_API_URL as string | undefined) ||
+  "";
+
 function useLiveWeight() {
   const [weight, setWeight] = useState<number | null>(null);
   const [status, setStatus] = useState<"waiting" | "live" | "error">("waiting");
@@ -95,6 +100,50 @@ function useLiveWeight() {
   }, []);
 
   return { weight, status };
+}
+
+function useDeviceImage(onNew: (url: string) => void) {
+  const [status, setStatus] = useState<"waiting" | "live" | "error">("waiting");
+  const lastIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!IMAGE_API_URL) {
+      setStatus("waiting");
+      return;
+    }
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const res = await fetch(IMAGE_API_URL, { cache: "no-store" });
+        if (!res.ok) throw new Error("bad status");
+        const data = (await res.json()) as {
+          image_url?: string;
+          url?: string;
+          id?: string | number;
+          timestamp?: string | number;
+        };
+        const url = data.image_url ?? data.url;
+        const id = String(data.id ?? data.timestamp ?? url ?? "");
+        if (cancelled) return;
+        setStatus("live");
+        if (url && id && id !== lastIdRef.current) {
+          lastIdRef.current = id;
+          onNew(url);
+        }
+      } catch {
+        if (!cancelled) setStatus("error");
+      }
+    };
+    tick();
+    const id = window.setInterval(tick, 2000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return { status };
 }
 
 function Dashboard() {
