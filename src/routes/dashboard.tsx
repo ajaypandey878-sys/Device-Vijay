@@ -213,6 +213,46 @@ function Dashboard() {
 
   return (
     <div className={meal ? "space-y-5 pb-36" : "space-y-5"}>
+      {/* Smart Device Status */}
+      <div
+        className="flex items-center gap-3 rounded-2xl border border-white/50 bg-background/60 p-3.5 shadow-[0_10px_28px_-16px_rgba(16,80,40,0.25)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/55"
+        data-testid="device-status"
+      >
+        <div
+          className={`grid h-10 w-10 place-items-center rounded-xl ${
+            deviceConnected
+              ? "bg-primary/15 text-primary"
+              : deviceError
+                ? "bg-destructive/15 text-destructive"
+                : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {deviceConnected ? (
+            <Radio className="h-5 w-5" />
+          ) : deviceError ? (
+            <WifiOff className="h-5 w-5" />
+          ) : (
+            <Wifi className="h-5 w-5" />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold leading-tight">Smart Device Status</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            {deviceConnected
+              ? "Connected · listening for new meals"
+              : deviceError
+                ? "Disconnected · check device connection"
+                : "Waiting for Smart Device..."}
+          </p>
+        </div>
+        {deviceConnected && (
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
+          </span>
+        )}
+      </div>
+
       {/* Edge-to-edge meal preview */}
       <div className="-mx-4 md:-mx-6" data-testid="meal-preview">
         <div className="overflow-hidden rounded-[20px] md:mx-0">
