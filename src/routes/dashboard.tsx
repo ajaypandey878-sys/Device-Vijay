@@ -399,6 +399,37 @@ function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Manual fallback */}
+      {!meal && (
+        <section className="space-y-2 pt-2" data-testid="manual-fallback">
+          <div className="flex items-center gap-3 px-1">
+            <span className="h-px flex-1 bg-border" />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Not using your device?
+            </p>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <div className="grid grid-cols-2 gap-2.5">
+            <Button
+              variant="outline"
+              onClick={() => cameraInputRef.current?.click()}
+              className="h-10 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              <Camera className="mr-1.5 h-3.5 w-3.5" />
+              Capture manually
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => uploadInputRef.current?.click()}
+              className="h-10 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              <Upload className="mr-1.5 h-3.5 w-3.5" />
+              Upload image
+            </Button>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
