@@ -37,7 +37,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-5 md:px-6">{children}</main>
+      <main className="mx-auto max-w-3xl px-4 py-3 md:px-6 md:py-5">{children}</main>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 backdrop-blur">
         <div className="mx-auto grid max-w-3xl grid-cols-3">
