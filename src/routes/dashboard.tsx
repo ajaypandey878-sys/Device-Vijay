@@ -296,12 +296,12 @@ function StatCard({
 
   return (
     <Card className="rounded-2xl border-0 shadow-[0_6px_18px_-8px_rgba(16,80,40,0.12)]">
-      <CardContent className="flex flex-col items-center gap-1.5 p-3">
-        <div className={`grid h-8 w-8 place-items-center rounded-lg ${toneClasses[tone]}`}>
-          <Icon className="h-4 w-4" />
+      <CardContent className="flex flex-col items-center gap-1 p-2.5">
+        <div className={`grid h-7 w-7 place-items-center rounded-lg ${toneClasses[tone]}`}>
+          <Icon className="h-3.5 w-3.5" />
         </div>
         <div className="text-center">
-          <p className="text-lg font-semibold leading-tight">
+          <p className="text-base font-semibold leading-tight">
             {value}
             <span className="ml-0.5 text-[10px] font-medium text-muted-foreground">{unit}</span>
           </p>
