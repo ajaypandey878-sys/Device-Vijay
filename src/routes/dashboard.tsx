@@ -304,6 +304,17 @@ function Dashboard() {
         <StatCard icon={Gauge} label="Confidence" value={confidence} unit="%" tone="sky" />
       </div>
 
+      {/* Persistent Daily Macros */}
+      <section className="space-y-3" data-testid="daily-macros">
+        <Card className="rounded-3xl border-0 shadow-[0_10px_36px_-18px_rgba(16,80,40,0.25)]">
+          <CardContent className="space-y-3.5 p-4">
+            <Macro label="Protein" value={meal?.protein ?? 0} goal={80} color="protein" icon={Dumbbell} />
+            <Macro label="Carbs" value={meal?.carbs ?? 0} goal={250} color="carbs" icon={Wheat} />
+            <Macro label="Fats" value={meal?.fats ?? 0} goal={70} color="fats" icon={Droplets} />
+          </CardContent>
+        </Card>
+      </section>
+
       {/* Hidden inputs for manual fallback */}
       <input
         ref={cameraInputRef}
