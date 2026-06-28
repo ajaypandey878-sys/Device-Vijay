@@ -111,7 +111,7 @@ function Dashboard() {
       <Card className="overflow-hidden rounded-[1.75rem] border-0 shadow-[0_12px_40px_-12px_rgba(16,80,40,0.16)]">
         <div
           className="grid w-full place-items-center bg-gradient-to-br from-secondary/70 via-muted/50 to-secondary/30"
-          style={{ height: 280 }}
+          style={{ height: 240 }}
         >
           {meal ? (
             <div className="flex flex-col items-center gap-2 text-muted-foreground">
