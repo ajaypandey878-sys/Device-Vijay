@@ -11,7 +11,6 @@ import {
   Pencil,
   Save,
   Loader2,
-  ImageIcon,
   Scale,
   Flame,
   Gauge,
@@ -37,7 +36,7 @@ export const Route = createFileRoute("/dashboard")({
 
 const MOCK_LIVE = {
   image_url:
-    "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=1200&q=80&auto=format&fit=crop",
   foods: [
     { name: "Rice", weight: 120, calories: 160 },
     { name: "Dal", weight: 80, calories: 110 },
@@ -54,7 +53,7 @@ const DAILY_GOAL = 2000;
 
 function Dashboard() {
   const [meal, setMeal] = useState<typeof MOCK_LIVE | null>(null);
-  const [name, setName] = useState("");
+  const [, setName] = useState("");
   const queryClient = useQueryClient();
   const saveMealFn = useServerFn(saveMeal);
 
@@ -76,7 +75,8 @@ function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ["meals"] });
       setMeal(null);
     },
-    onError: (e: any) => toast.error(e?.message ?? "Failed to save meal"),
+    onError: (e: { message?: string }) =>
+      toast.error(e?.message ?? "Failed to save meal"),
   });
 
   const processMock = () => setMeal(MOCK_LIVE);
@@ -87,63 +87,48 @@ function Dashboard() {
   const confidence = meal?.confidence ?? 0;
 
   return (
-    <div className="space-y-1.5">
-      {/* Top row: 3 compact stat cards */}
-      <div className="grid grid-cols-3 gap-2">
-        <StatCard
-          icon={Scale}
-          label="Weight"
-          value={totalWeight}
-          unit="g"
-          tone="primary"
-        />
-        <StatCard
-          icon={Flame}
-          label="Calories"
-          value={consumed}
-          unit="kcal"
-          tone="accent"
-        />
-        <StatCard
-          icon={Gauge}
-          label="Confidence"
-          value={confidence}
-          unit="%"
-          tone="sky"
-        />
+    <div className={meal ? "space-y-5 pb-36" : "space-y-5"}>
+      {/* Edge-to-edge meal preview */}
+      <div className="-mx-4 md:-mx-6" data-testid="meal-preview">
+        <div className="overflow-hidden rounded-[20px] md:mx-0">
+          <div
+            className="relative w-full bg-gradient-to-br from-secondary/70 via-muted/50 to-secondary/30"
+            style={{ height: 220 }}
+          >
+            {meal ? (
+              <>
+                <img
+                  src={meal.image_url}
+                  alt="Captured meal"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+                <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-background/85 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary shadow-sm backdrop-blur">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                  </span>
+                  Live
+                </span>
+              </>
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                <div className="grid h-16 w-16 place-items-center rounded-full bg-background/90 shadow-sm">
+                  <Camera className="h-7 w-7" />
+                </div>
+                <p className="text-sm font-medium">Capture or upload to begin</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Live meal preview card */}
-      <Card className="overflow-hidden rounded-[1.75rem] border-0 shadow-[0_12px_40px_-12px_rgba(16,80,40,0.16)]" data-testid="meal-preview">
-        <div
-          className="relative grid w-full place-items-center bg-gradient-to-br from-secondary/70 via-muted/50 to-secondary/30"
-          style={{ height: 240 }}
-        >
-          {meal ? (
-            <>
-              <img
-                src={meal.image_url}
-                alt="Captured meal"
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-              <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-background/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary shadow-sm backdrop-blur">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-                </span>
-                Live
-              </span>
-            </>
-          ) : (
-            <div className="flex flex-col items-center gap-3 text-muted-foreground">
-              <div className="grid h-16 w-16 place-items-center rounded-full bg-background/90 shadow-sm">
-                <Camera className="h-7 w-7" />
-              </div>
-              <p className="text-sm font-medium">Capture or upload to begin</p>
-            </div>
-          )}
-        </div>
-      </Card>
+      {/* Glassmorphic stat cards */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard icon={Scale} label="Weight" value={totalWeight} unit="g" tone="primary" />
+        <StatCard icon={Flame} label="Calories" value={consumed} unit="kcal" tone="accent" />
+        <StatCard icon={Gauge} label="Confidence" value={confidence} unit="%" tone="sky" />
+      </div>
 
       {/* Capture / Upload buttons */}
       {!meal && (
@@ -151,7 +136,7 @@ function Dashboard() {
           <Button
             size="lg"
             onClick={processMock}
-            className="h-16 flex-col gap-1 rounded-2xl text-sm shadow-[0_8px_28px_-12px_rgba(40,130,75,0.45)]"
+            className="h-16 flex-col gap-1 rounded-2xl text-sm shadow-[0_12px_32px_-12px_rgba(40,130,75,0.55)]"
           >
             <Camera className="h-5 w-5" />
             <span className="font-semibold">Capture Meal</span>
@@ -168,78 +153,57 @@ function Dashboard() {
         </div>
       )}
 
-      {/* Active meal results */}
       {meal && (
-        <div className="space-y-1.5">
-          {/* Green calorie ring below preview */}
-          <div className="flex flex-col items-center justify-center gap-1" data-testid="calorie-ring">
-            <CalorieRing
-              pct={ringPct}
-              consumed={consumed}
-              goal={DAILY_GOAL}
-            />
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <>
+          {/* Glowing calorie ring */}
+          <div className="flex flex-col items-center justify-center gap-2" data-testid="calorie-ring">
+            <CalorieRing pct={ringPct} consumed={consumed} goal={DAILY_GOAL} />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               Daily intake
             </p>
           </div>
 
           {/* Detected food cards */}
-          <Card className="rounded-[1.75rem] border-0 shadow-[0_8px_30px_-12px_rgba(16,80,40,0.12)]" data-testid="detected-foods">
-            <CardContent className="space-y-1.5 p-3">
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Detected foods
-                </p>
-                <span className="text-[10px] text-muted-foreground">{meal.foods.length} items</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {meal.foods.map((food, i) => (
-                  <FoodCard key={food.name} food={food} index={i} />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Colorful macro bars */}
-          <Card className="rounded-[1.75rem] border-0 shadow-[0_8px_30px_-12px_rgba(16,80,40,0.12)]" data-testid="macro-bars">
-            <CardContent className="space-y-0.5 p-1.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Macros
+          <section className="space-y-2.5" data-testid="detected-foods">
+            <div className="flex items-center justify-between px-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Detected foods
               </p>
-              <Macro
-                label="Protein"
-                value={meal.protein}
-                goal={80}
-                color="protein"
-                icon={Dumbbell}
-              />
-              <Macro
-                label="Carbs"
-                value={meal.carbs}
-                goal={250}
-                color="carbs"
-                icon={Wheat}
-              />
-              <Macro
-                label="Fats"
-                value={meal.fats}
-                goal={70}
-                color="fats"
-                icon={Droplets}
-              />
-            </CardContent>
-          </Card>
-        </div>
+              <span className="text-[11px] text-muted-foreground">
+                {meal.foods.length} items
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {meal.foods.map((food, i) => (
+                <FoodCard key={food.name} food={food} index={i} />
+              ))}
+            </div>
+          </section>
+
+          {/* Smooth macro bars */}
+          <section className="space-y-3" data-testid="macro-bars">
+            <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Macros
+            </p>
+            <Card className="rounded-3xl border-0 shadow-[0_10px_36px_-18px_rgba(16,80,40,0.25)]">
+              <CardContent className="space-y-3.5 p-4">
+                <Macro label="Protein" value={meal.protein} goal={80} color="protein" icon={Dumbbell} />
+                <Macro label="Carbs" value={meal.carbs} goal={250} color="carbs" icon={Wheat} />
+                <Macro label="Fats" value={meal.fats} goal={70} color="fats" icon={Droplets} />
+              </CardContent>
+            </Card>
+          </section>
+        </>
       )}
 
-      {/* Sticky bottom actions */}
+      {/* Floating glassy action bar */}
       {meal && (
-        <div className="fixed bottom-14 left-3 right-3 z-20" data-testid="action-bar">
-          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border/50 bg-background/95 p-1 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.15)] backdrop-blur">
+        <div className="fixed bottom-16 left-4 right-4 z-20 md:left-1/2 md:max-w-3xl md:-translate-x-1/2 md:px-6" data-testid="action-bar">
+          <div className="grid grid-cols-2 gap-2.5 rounded-3xl border border-white/40 bg-background/60 p-2 shadow-[0_20px_50px_-20px_rgba(16,80,40,0.45)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/55">
             <Button
               variant="outline"
               size="lg"
-              className="h-11 rounded-xl border-2 border-primary/30 bg-background text-foreground hover:bg-muted hover:text-foreground"
+              className="h-12 rounded-2xl border-primary/25 bg-background/80 text-foreground hover:bg-background"
             >
               <Pencil className="mr-2 h-4 w-4" />
               Correct
@@ -248,7 +212,7 @@ function Dashboard() {
               size="lg"
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending}
-              className="h-11 rounded-xl text-sm font-semibold shadow-[0_8px_24px_-10px_rgba(40,120,70,0.4)]"
+              className="h-12 rounded-2xl text-sm font-semibold shadow-[0_14px_32px_-14px_rgba(40,130,75,0.7)]"
             >
               {saveMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -273,30 +237,35 @@ function CalorieRing({
   consumed: number;
   goal: number;
 }) {
-  const size = 90;
-  const stroke = 9;
+  const size = 168;
+  const stroke = 16;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const offset = c - (pct / 100) * c;
   const gradientId = "calorieRingGradient";
 
   return (
-    <div
-      className="relative rounded-full shadow-[0_12px_30px_-12px_rgba(40,130,75,0.35)]"
-      style={{ width: size, height: size }}
-    >
-      <svg width={size} height={size} className="-rotate-90">
+    <div className="relative" style={{ width: size, height: size }}>
+      {/* glow */}
+      <div
+        className="absolute inset-2 rounded-full blur-2xl opacity-60"
+        style={{
+          background:
+            "radial-gradient(circle, color-mix(in oklab, var(--primary) 55%, transparent) 0%, transparent 70%)",
+        }}
+      />
+      <svg width={size} height={size} className="relative -rotate-90">
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="var(--primary)" />
-            <stop offset="100%" stopColor="var(--success)" />
+            <stop offset="100%" stopColor="var(--success, var(--primary))" />
           </linearGradient>
         </defs>
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
-          stroke="var(--secondary)"
+          stroke="color-mix(in oklab, var(--primary) 10%, var(--secondary))"
           strokeWidth={stroke}
           fill="none"
         />
@@ -314,8 +283,8 @@ function CalorieRing({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <p className="text-lg font-semibold tracking-tight">{consumed}</p>
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="text-3xl font-semibold tracking-tight tabular-nums">{consumed}</p>
+        <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           of {goal} kcal
         </p>
       </div>
@@ -337,35 +306,37 @@ function StatCard({
   tone: "primary" | "accent" | "sky";
 }) {
   const toneClasses = {
-    primary: "bg-primary/10 text-primary",
-    accent: "bg-accent/10 text-accent",
-    sky: "bg-chart-4/10 text-chart-4",
+    primary: "bg-primary/15 text-primary",
+    accent: "bg-accent/15 text-accent",
+    sky: "bg-chart-4/15 text-chart-4",
   };
 
   return (
-    <Card className="h-16 rounded-2xl border-0 shadow-[0_6px_18px_-8px_rgba(16,80,40,0.12)]">
-      <CardContent className="flex h-full flex-col items-center justify-center gap-1 p-2">
-        <div className={`grid h-6 w-6 place-items-center rounded-lg ${toneClasses[tone]}`}>
-          <Icon className="h-3.5 w-3.5" />
+    <div
+      className="relative overflow-hidden rounded-2xl border border-white/50 bg-background/60 p-3 shadow-[0_10px_28px_-16px_rgba(16,80,40,0.25)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/55"
+    >
+      <div className="flex items-center gap-2">
+        <div className={`grid h-8 w-8 place-items-center rounded-xl ${toneClasses[tone]}`}>
+          <Icon className="h-4 w-4" />
         </div>
-        <div className="text-center">
-          <p className="text-sm font-semibold leading-none">
-            {value}
-            <span className="ml-0.5 text-[10px] font-medium text-muted-foreground">{unit}</span>
-          </p>
-          <p className="text-[10px] font-medium leading-none text-muted-foreground">{label}</p>
-        </div>
-      </CardContent>
-    </Card>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          {label}
+        </p>
+      </div>
+      <p className="mt-2 text-xl font-semibold leading-none tabular-nums">
+        {value}
+        <span className="ml-1 text-[11px] font-medium text-muted-foreground">{unit}</span>
+      </p>
+    </div>
   );
 }
 
 const FOOD_TONES = [
-  "bg-chart-1/10 text-chart-1",
-  "bg-chart-2/10 text-chart-2",
-  "bg-chart-3/10 text-chart-3",
-  "bg-chart-4/10 text-chart-4",
-  "bg-chart-5/10 text-chart-5",
+  { wrap: "bg-[color-mix(in_oklab,var(--chart-1)_14%,white)]", icon: "bg-chart-1/20 text-chart-1" },
+  { wrap: "bg-[color-mix(in_oklab,var(--chart-2)_14%,white)]", icon: "bg-chart-2/20 text-chart-2" },
+  { wrap: "bg-[color-mix(in_oklab,var(--chart-3)_14%,white)]", icon: "bg-chart-3/20 text-chart-3" },
+  { wrap: "bg-[color-mix(in_oklab,var(--chart-4)_14%,white)]", icon: "bg-chart-4/20 text-chart-4" },
+  { wrap: "bg-[color-mix(in_oklab,var(--chart-5)_14%,white)]", icon: "bg-chart-5/20 text-chart-5" },
 ];
 
 function FoodCard({
@@ -377,13 +348,18 @@ function FoodCard({
 }) {
   const tone = FOOD_TONES[index % FOOD_TONES.length];
   return (
-    <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary/50 p-1.5 text-center shadow-sm" data-testid="food-card">
-      <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${tone}`}>
-        <UtensilsCrossed className="h-4 w-4" />
+    <div
+      className={`flex flex-col items-center gap-2 rounded-2xl ${tone.wrap} p-3 text-center shadow-[0_10px_24px_-14px_rgba(16,80,40,0.25)]`}
+      data-testid="food-card"
+    >
+      <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${tone.icon} shadow-sm`}>
+        <UtensilsCrossed className="h-5 w-5" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-xs font-semibold leading-tight">{food.name}</p>
-        <p className="text-[10px] text-muted-foreground">{food.weight} g · {food.calories} kcal</p>
+        <p className="truncate text-sm font-semibold leading-tight">{food.name}</p>
+        <p className="mt-0.5 text-[10px] text-muted-foreground">
+          {food.weight}g · {food.calories} kcal
+        </p>
       </div>
     </div>
   );
@@ -403,10 +379,10 @@ function Macro({
   icon: React.ElementType;
 }) {
   const pct = Math.min(100, (value / goal) * 100);
-  const colorMap = {
-    protein: "bg-macro-protein",
-    carbs: "bg-macro-carbs",
-    fats: "bg-macro-fats",
+  const fromMap = {
+    protein: "from-macro-protein/80 to-macro-protein",
+    carbs: "from-macro-carbs/80 to-macro-carbs",
+    fats: "from-macro-fats/80 to-macro-fats",
   };
   const textMap = {
     protein: "text-macro-protein",
@@ -414,27 +390,27 @@ function Macro({
     fats: "text-macro-fats",
   };
   const bgTone = {
-    protein: "bg-macro-protein/10",
-    carbs: "bg-macro-carbs/10",
-    fats: "bg-macro-fats/10",
+    protein: "bg-macro-protein/15",
+    carbs: "bg-macro-carbs/15",
+    fats: "bg-macro-fats/15",
   };
 
   return (
-    <div className="space-y-0.5">
-      <div className="flex items-center justify-between leading-none">
-        <div className="flex items-center gap-1.5">
-          <div className={`grid h-4 w-4 place-items-center rounded-md ${bgTone[color]} ${textMap[color]}`}>
-            <Icon className="h-3 w-3" />
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className={`grid h-6 w-6 place-items-center rounded-lg ${bgTone[color]} ${textMap[color]}`}>
+            <Icon className="h-3.5 w-3.5" />
           </div>
-          <span className="text-xs font-semibold">{label}</span>
+          <span className="text-sm font-semibold">{label}</span>
         </div>
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-[11px] text-muted-foreground tabular-nums">
           <span className={`font-semibold ${textMap[color]}`}>{value}g</span> / {goal}g
         </span>
       </div>
-      <div className="h-1 overflow-hidden rounded-full bg-secondary">
+      <div className="h-2.5 overflow-hidden rounded-full bg-secondary/70">
         <div
-          className={`h-full rounded-full ${colorMap[color]} transition-[width] duration-500`}
+          className={`h-full rounded-full bg-gradient-to-r ${fromMap[color]} transition-[width] duration-700`}
           style={{ width: `${pct}%` }}
         />
       </div>
