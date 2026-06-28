@@ -149,11 +149,15 @@ function useDeviceImage(onNew: (url: string) => void) {
 function Dashboard() {
   const [meal, setMeal] = useState<typeof MOCK_LIVE | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [captureSource, setCaptureSource] = useState<"device" | "manual" | null>(null);
+  const [estimatedWeight, setEstimatedWeight] = useState<number | null>(null);
+  const [estimationFailed, setEstimationFailed] = useState(false);
   const [, setName] = useState("");
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const saveMealFn = useServerFn(saveMeal);
+  const estimateWeightFn = useServerFn(estimateWeight);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -166,25 +170,76 @@ function Dashboard() {
     });
   }, []);
 
+  const estimateMutation = useMutation({
+    mutationFn: (image: string) => estimateWeightFn({ data: { image } }),
+    onSuccess: (res) => {
+      if (res.grams != null) {
+        setEstimatedWeight(res.grams);
+        setEstimationFailed(false);
+      } else {
+        setEstimatedWeight(null);
+        setEstimationFailed(true);
+      }
+    },
+    onError: () => {
+      setEstimatedWeight(null);
+      setEstimationFailed(true);
+    },
+  });
+
+  const resetCapture = () => {
+    setCapturedImage(null);
+    setCaptureSource(null);
+    setEstimatedWeight(null);
+    setEstimationFailed(false);
+    estimateMutation.reset();
+  };
+
   const saveMutation = useMutation({
-    mutationFn: () => saveMealFn({ data: meal! }),
+    mutationFn: () => {
+      if (meal) {
+        const httpUrl = meal.image_url?.startsWith("http") ? meal.image_url : null;
+        return saveMealFn({ data: { ...meal, image_url: httpUrl } });
+      }
+      const resolvedWeight =
+        captureSource === "device" && liveWeight != null
+          ? liveWeight
+          : (estimatedWeight ?? 0);
+      const httpUrl =
+        capturedImage && capturedImage.startsWith("http") ? capturedImage : null;
+      return saveMealFn({
+        data: {
+          foods: [{ name: "Unknown meal", weight: resolvedWeight, calories: 0 }],
+          total_calories: 0,
+          protein: 0,
+          carbs: 0,
+          fats: 0,
+          confidence: 0,
+          image_url: httpUrl,
+        },
+      });
+    },
     onSuccess: () => {
       toast.success("Meal saved");
       queryClient.invalidateQueries({ queryKey: ["meals"] });
       setMeal(null);
-      setCapturedImage(null);
+      resetCapture();
     },
     onError: (e: { message?: string }) =>
       toast.error(e?.message ?? "Failed to save meal"),
   });
 
-  
-
   const handleFile = (file: File | null | undefined) => {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === "string") setCapturedImage(reader.result);
+      if (typeof reader.result === "string") {
+        setCapturedImage(reader.result);
+        setCaptureSource("manual");
+        setEstimatedWeight(null);
+        setEstimationFailed(false);
+        estimateMutation.mutate(reader.result);
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -194,22 +249,60 @@ function Dashboard() {
   const { weight: liveWeight, status: weightStatus } = useLiveWeight();
   const { status: imageStatus } = useDeviceImage((url) => {
     setCapturedImage(url);
+    setCaptureSource("device");
+    setEstimatedWeight(null);
+    setEstimationFailed(false);
   });
   const deviceConnected = weightStatus === "live" || imageStatus === "live";
   const deviceError =
     !deviceConnected && (weightStatus === "error" || imageStatus === "error");
   const totalWeight = meal?.foods.reduce((s, f) => s + f.weight, 0) ?? 0;
-  const weightDisplay: { value: number | string; unit: string } =
-    totalWeight > 0
-      ? { value: totalWeight, unit: "g" }
-      : weightStatus === "live" && liveWeight !== null
-        ? { value: liveWeight, unit: "g" }
-        : weightStatus === "error"
-          ? { value: "Disconnected", unit: "" }
-          : { value: "Waiting...", unit: "" };
+  const weightDisplay: { value: number | string; unit: string } = (() => {
+    if (totalWeight > 0) return { value: totalWeight, unit: "g" };
+    if (captureSource === "device" && liveWeight != null)
+      return { value: liveWeight, unit: "g" };
+    if (captureSource === "manual") {
+      if (estimateMutation.isPending) return { value: "Estimating…", unit: "" };
+      if (estimatedWeight != null) return { value: estimatedWeight, unit: "g" };
+      if (estimationFailed) return { value: "Unknown", unit: "" };
+      return { value: "Estimating…", unit: "" };
+    }
+    if (weightStatus === "live" && liveWeight !== null)
+      return { value: liveWeight, unit: "g" };
+    if (weightStatus === "error") return { value: "Disconnected", unit: "" };
+    return { value: "Waiting...", unit: "" };
+  })();
   const consumed = meal?.total_calories ?? 0;
   const ringPct = Math.min(100, (consumed / DAILY_GOAL) * 100);
   const confidence = meal?.confidence ?? 0;
+  const canSave = !!(meal || capturedImage);
+  const showActionBar = canSave;
+
+  const statusText = (() => {
+    if (captureSource === "manual") {
+      if (estimateMutation.isPending) return "Manual meal captured · estimating weight…";
+      if (estimatedWeight != null)
+        return `Manual meal captured · ~${estimatedWeight}g estimated`;
+      if (estimationFailed) return "Manual meal captured · weight unknown";
+      return "Manual meal captured";
+    }
+    if (captureSource === "device") return "Device meal received · exact weight";
+    if (deviceConnected) return "Connected · listening for new meals";
+    if (deviceError) return "Disconnected · check device connection";
+    return "Waiting for Smart Device...";
+  })();
+
+  const sourceBadge =
+    captureSource === "device"
+      ? "Device"
+      : captureSource === "manual"
+        ? estimatedWeight != null
+          ? "Estimated"
+          : estimationFailed
+            ? "Unknown"
+            : "Manual"
+        : null;
+
 
   return (
     <div className={meal ? "space-y-5 pb-36" : "space-y-5"}>
