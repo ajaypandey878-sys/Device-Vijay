@@ -112,7 +112,7 @@ function Dashboard() {
       </div>
 
       {/* Live meal preview card */}
-      <Card className="overflow-hidden rounded-[1.75rem] border-0 shadow-[0_12px_40px_-12px_rgba(16,80,40,0.16)]">
+      <Card className="overflow-hidden rounded-[1.75rem] border-0 shadow-[0_12px_40px_-12px_rgba(16,80,40,0.16)]" data-testid="meal-preview">
         <div
           className="relative grid w-full place-items-center bg-gradient-to-br from-secondary/70 via-muted/50 to-secondary/30"
           style={{ height: 240 }}
