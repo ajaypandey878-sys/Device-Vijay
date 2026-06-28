@@ -133,25 +133,27 @@ function Dashboard() {
       </Card>
 
       {/* Capture / Upload */}
-      <div className="grid grid-cols-2 gap-3">
-        <Button
-          size="lg"
-          onClick={processMock}
-          className="h-20 flex-col gap-1.5 rounded-2xl text-base shadow-[0_8px_28px_-12px_rgba(40,130,75,0.5)]"
-        >
-          <Camera className="h-6 w-6" />
-          <span className="font-medium">Capture Meal</span>
-        </Button>
-        <Button
-          size="lg"
-          variant="secondary"
-          onClick={processMock}
-          className="h-20 flex-col gap-1.5 rounded-2xl text-base"
-        >
-          <Upload className="h-6 w-6" />
-          <span className="font-medium">Upload Meal</span>
-        </Button>
-      </div>
+      {!meal && (
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            size="lg"
+            onClick={processMock}
+            className="h-20 flex-col gap-1.5 rounded-2xl text-base shadow-[0_8px_28px_-12px_rgba(40,130,75,0.5)]"
+          >
+            <Camera className="h-6 w-6" />
+            <span className="font-medium">Capture Meal</span>
+          </Button>
+          <Button
+            size="lg"
+            variant="secondary"
+            onClick={processMock}
+            className="h-20 flex-col gap-1.5 rounded-2xl text-base"
+          >
+            <Upload className="h-6 w-6" />
+            <span className="font-medium">Upload Meal</span>
+          </Button>
+        </div>
+      )}
 
       {/* Meal result */}
       {meal && (
