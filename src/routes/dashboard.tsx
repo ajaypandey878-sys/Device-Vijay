@@ -83,7 +83,7 @@ function Dashboard() {
       toast.error(e?.message ?? "Failed to save meal"),
   });
 
-  const processMock = () => setMeal(MOCK_LIVE);
+  
 
   const handleFile = (file: File | null | undefined) => {
     if (!file) return;
