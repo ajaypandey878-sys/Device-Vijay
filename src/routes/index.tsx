@@ -4,9 +4,9 @@ import { Camera, Scale, Gauge, LineChart } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Smart Deck — Weigh, capture, and track every meal" },
+      { title: "AshoMa — Weigh, capture, and track every meal" },
       { name: "description", content: "A connected food scale + camera deck that recognizes meals and tracks your nutrition automatically." },
-      { property: "og:title", content: "Smart Deck" },
+      { property: "og:title", content: "AshoMa" },
       { property: "og:description", content: "Capture, weigh, recognize, and log meals automatically." },
     ],
   }),
@@ -19,8 +19,8 @@ function Landing() {
       <header className="border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2 font-semibold">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">SD</span>
-            Smart Deck
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">AM</span>
+            AshoMa
           </Link>
           <nav className="flex items-center gap-3 text-sm">
             <Link to="/login" className="text-muted-foreground hover:text-foreground">Sign in</Link>
@@ -38,7 +38,7 @@ function Landing() {
             Weigh it. Snap it. <span className="text-primary">Know it.</span>
           </h1>
           <p className="mt-5 text-lg text-muted-foreground">
-            Smart Deck pairs four load cells, a depth sensor, and a camera with AI food recognition.
+            AshoMa pairs four load cells, a depth sensor, and a camera with AI food recognition.
             Every plate becomes a labeled meal with grams, calories, and nutrients — automatically.
           </p>
           <div className="mt-8 flex gap-3">

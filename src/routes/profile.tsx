@@ -18,7 +18,7 @@ import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
 export const Route = createFileRoute("/profile")({
   ssr: false,
   beforeLoad: requireAuthBeforeLoad,
-  head: () => ({ meta: [{ title: "Profile — Smart Deck" }] }),
+  head: () => ({ meta: [{ title: "Profile — AshoMa" }] }),
   component: () => <AppShell><Profile /></AppShell>,
 });
 
@@ -38,7 +38,7 @@ function Profile() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
-        <p className="text-sm text-muted-foreground">Your account and Smart Deck devices.</p>
+        <p className="text-sm text-muted-foreground">Your account and AshoMa devices.</p>
       </div>
 
       <Card><CardContent className="p-5">
@@ -51,7 +51,7 @@ function Profile() {
       <Card><CardContent className="p-5">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="font-semibold">Smart Deck devices</h2>
+            <h2 className="font-semibold">AshoMa devices</h2>
             <p className="text-sm text-muted-foreground">Each Raspberry Pi uses a device token to upload meals.</p>
           </div>
           <NewDeviceDialog />
@@ -113,7 +113,7 @@ function NewDeviceDialog() {
       <Button onClick={() => setOpen(true)}><Plus className="mr-1 h-4 w-4" /> Add device</Button>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{token ? "Save your device token" : "Add a Smart Deck"}</DialogTitle>
+          <DialogTitle>{token ? "Save your device token" : "Add an AshoMa"}</DialogTitle>
         </DialogHeader>
         {!token ? (
           <div className="space-y-3">

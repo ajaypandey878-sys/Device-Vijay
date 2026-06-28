@@ -18,7 +18,7 @@ import { MealImage } from "@/components/meal-image";
 export const Route = createFileRoute("/meal/$id")({
   ssr: false,
   beforeLoad: requireAuthBeforeLoad,
-  head: () => ({ meta: [{ title: "Meal — Smart Deck" }] }),
+  head: () => ({ meta: [{ title: "Meal — AshoMa" }] }),
   component: () => <AppShell><MealDetail /></AppShell>,
 });
 
