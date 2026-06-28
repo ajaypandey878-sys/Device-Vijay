@@ -139,7 +139,16 @@ function Dashboard() {
 
   const previewSrc = meal?.image_url ?? capturedImage;
 
+  const { weight: liveWeight, status: weightStatus } = useLiveWeight();
   const totalWeight = meal?.foods.reduce((s, f) => s + f.weight, 0) ?? 0;
+  const weightDisplay: { value: number | string; unit: string } =
+    totalWeight > 0
+      ? { value: totalWeight, unit: "g" }
+      : weightStatus === "live" && liveWeight !== null
+        ? { value: liveWeight, unit: "g" }
+        : weightStatus === "error"
+          ? { value: "Disconnected", unit: "" }
+          : { value: "Waiting...", unit: "" };
   const consumed = meal?.total_calories ?? 0;
   const ringPct = Math.min(100, (consumed / DAILY_GOAL) * 100);
   const confidence = meal?.confidence ?? 0;
