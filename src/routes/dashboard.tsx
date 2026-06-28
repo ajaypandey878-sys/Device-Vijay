@@ -18,6 +18,9 @@ import {
   Dumbbell,
   Wheat,
   Droplets,
+  Wifi,
+  WifiOff,
+  Radio,
 } from "lucide-react";
 import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
 import { saveMeal } from "@/lib/meals.functions";
