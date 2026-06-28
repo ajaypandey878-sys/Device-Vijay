@@ -344,11 +344,11 @@ function StatCard({
 }
 
 const FOOD_THUMBNAILS = [
-  "bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400",
-  "bg-yellow-100 text-yellow-600 dark:bg-yellow-950/40 dark:text-yellow-400",
-  "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400",
-  "bg-orange-100 text-orange-600 dark:bg-orange-950/40 dark:text-orange-400",
-  "bg-purple-100 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400",
+  "bg-chart-1/10 text-chart-1",
+  "bg-chart-2/10 text-chart-2",
+  "bg-chart-3/10 text-chart-3",
+  "bg-chart-4/10 text-chart-4",
+  "bg-chart-5/10 text-chart-5",
 ];
 
 function FoodCard({
