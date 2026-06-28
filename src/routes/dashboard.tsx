@@ -169,7 +169,7 @@ function Dashboard() {
       {meal && (
         <div className="space-y-2">
           {/* Green calorie ring below preview */}
-          <div className="flex flex-col items-center justify-center gap-1">
+          <div className="flex flex-col items-center justify-center gap-1" data-testid="calorie-ring">
             <CalorieRing
               pct={ringPct}
               consumed={consumed}
@@ -181,7 +181,7 @@ function Dashboard() {
           </div>
 
           {/* Detected food cards */}
-          <Card className="rounded-[1.75rem] border-0 shadow-[0_8px_30px_-12px_rgba(16,80,40,0.12)]">
+          <Card className="rounded-[1.75rem] border-0 shadow-[0_8px_30px_-12px_rgba(16,80,40,0.12)]" data-testid="detected-foods">
             <CardContent className="space-y-2 p-3">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -198,7 +198,7 @@ function Dashboard() {
           </Card>
 
           {/* Colorful macro bars */}
-          <Card className="rounded-[1.75rem] border-0 shadow-[0_8px_30px_-12px_rgba(16,80,40,0.12)]">
+          <Card className="rounded-[1.75rem] border-0 shadow-[0_8px_30px_-12px_rgba(16,80,40,0.12)]" data-testid="macro-bars">
             <CardContent className="space-y-2 p-3">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Macros
@@ -231,7 +231,7 @@ function Dashboard() {
 
       {/* Sticky bottom actions */}
       {meal && (
-        <div className="fixed bottom-14 left-3 right-3 z-20">
+        <div className="fixed bottom-14 left-3 right-3 z-20" data-testid="action-bar">
           <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border/50 bg-background/95 p-2 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.15)] backdrop-blur">
             <Button
               variant="outline"
