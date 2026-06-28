@@ -120,19 +120,20 @@ function Dashboard() {
           style={{ height: 240 }}
         >
           {meal ? (
-            <div className="flex flex-col items-center gap-2 text-muted-foreground">
-              <div className="grid h-20 w-20 place-items-center rounded-full bg-background/90 shadow-[0_8px_24px_-8px_rgba(16,80,40,0.18)]">
-                <UtensilsCrossed className="h-9 w-9 text-primary" />
-              </div>
-              <p className="text-sm font-medium">Live meal preview</p>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">
+            <>
+              <img
+                src={meal.image_url}
+                alt="Captured meal"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-background/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary shadow-sm backdrop-blur">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
                 </span>
-                Active
+                Live
               </span>
-            </div>
+            </>
           ) : (
             <div className="flex flex-col items-center gap-3 text-muted-foreground">
               <div className="grid h-16 w-16 place-items-center rounded-full bg-background/90 shadow-sm">
