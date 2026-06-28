@@ -317,12 +317,12 @@ function StatCard({
   label: string;
   value: string;
   unit: string;
-  tone: "emerald" | "amber" | "sky";
+  tone: "primary" | "accent" | "sky";
 }) {
   const toneClasses = {
-    emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400",
-    amber: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400",
-    sky: "bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400",
+    primary: "bg-primary/10 text-primary",
+    accent: "bg-accent/10 text-accent",
+    sky: "bg-chart-4/10 text-chart-4",
   };
 
   return (
