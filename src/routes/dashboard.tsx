@@ -307,7 +307,8 @@ function Dashboard() {
 
 
   return (
-    <div className={meal ? "space-y-5 pb-36" : "space-y-5"}>
+    <div className={showActionBar ? "space-y-5 pb-36" : "space-y-5"}>
+
       {/* Smart Device Status */}
       <div
         className="flex items-center gap-3 rounded-2xl border border-white/50 bg-background/60 p-3.5 shadow-[0_10px_28px_-16px_rgba(16,80,40,0.25)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/55"
