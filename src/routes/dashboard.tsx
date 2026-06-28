@@ -18,6 +18,9 @@ import {
   Dumbbell,
   Wheat,
   Droplets,
+  Wifi,
+  WifiOff,
+  Radio,
 } from "lucide-react";
 import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
 import { saveMeal } from "@/lib/meals.functions";
@@ -56,6 +59,11 @@ const WEIGHT_API_URL =
   (import.meta.env.VITE_WEIGHT_API_URL as string | undefined) ||
   "";
 
+const IMAGE_API_URL =
+  (typeof window !== "undefined" && window.localStorage.getItem("ashoma.image_api_url")) ||
+  (import.meta.env.VITE_IMAGE_API_URL as string | undefined) ||
+  "";
+
 function useLiveWeight() {
   const [weight, setWeight] = useState<number | null>(null);
   const [status, setStatus] = useState<"waiting" | "live" | "error">("waiting");
@@ -92,6 +100,50 @@ function useLiveWeight() {
   }, []);
 
   return { weight, status };
+}
+
+function useDeviceImage(onNew: (url: string) => void) {
+  const [status, setStatus] = useState<"waiting" | "live" | "error">("waiting");
+  const lastIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!IMAGE_API_URL) {
+      setStatus("waiting");
+      return;
+    }
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const res = await fetch(IMAGE_API_URL, { cache: "no-store" });
+        if (!res.ok) throw new Error("bad status");
+        const data = (await res.json()) as {
+          image_url?: string;
+          url?: string;
+          id?: string | number;
+          timestamp?: string | number;
+        };
+        const url = data.image_url ?? data.url;
+        const id = String(data.id ?? data.timestamp ?? url ?? "");
+        if (cancelled) return;
+        setStatus("live");
+        if (url && id && id !== lastIdRef.current) {
+          lastIdRef.current = id;
+          onNew(url);
+        }
+      } catch {
+        if (!cancelled) setStatus("error");
+      }
+    };
+    tick();
+    const id = window.setInterval(tick, 2000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return { status };
 }
 
 function Dashboard() {
@@ -140,6 +192,12 @@ function Dashboard() {
   const previewSrc = meal?.image_url ?? capturedImage;
 
   const { weight: liveWeight, status: weightStatus } = useLiveWeight();
+  const { status: imageStatus } = useDeviceImage((url) => {
+    setCapturedImage(url);
+  });
+  const deviceConnected = weightStatus === "live" || imageStatus === "live";
+  const deviceError =
+    !deviceConnected && (weightStatus === "error" || imageStatus === "error");
   const totalWeight = meal?.foods.reduce((s, f) => s + f.weight, 0) ?? 0;
   const weightDisplay: { value: number | string; unit: string } =
     totalWeight > 0
@@ -155,6 +213,46 @@ function Dashboard() {
 
   return (
     <div className={meal ? "space-y-5 pb-36" : "space-y-5"}>
+      {/* Smart Device Status */}
+      <div
+        className="flex items-center gap-3 rounded-2xl border border-white/50 bg-background/60 p-3.5 shadow-[0_10px_28px_-16px_rgba(16,80,40,0.25)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/55"
+        data-testid="device-status"
+      >
+        <div
+          className={`grid h-10 w-10 place-items-center rounded-xl ${
+            deviceConnected
+              ? "bg-primary/15 text-primary"
+              : deviceError
+                ? "bg-destructive/15 text-destructive"
+                : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {deviceConnected ? (
+            <Radio className="h-5 w-5" />
+          ) : deviceError ? (
+            <WifiOff className="h-5 w-5" />
+          ) : (
+            <Wifi className="h-5 w-5" />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold leading-tight">Smart Device Status</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            {deviceConnected
+              ? "Connected · listening for new meals"
+              : deviceError
+                ? "Disconnected · check device connection"
+                : "Waiting for Smart Device..."}
+          </p>
+        </div>
+        {deviceConnected && (
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
+          </span>
+        )}
+      </div>
+
       {/* Edge-to-edge meal preview */}
       <div className="-mx-4 md:-mx-6" data-testid="meal-preview">
         <div className="overflow-hidden rounded-[20px] md:mx-0">
@@ -206,49 +304,29 @@ function Dashboard() {
         <StatCard icon={Gauge} label="Confidence" value={confidence} unit="%" tone="sky" />
       </div>
 
-      {/* Capture / Upload buttons */}
-      {!meal && (
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            ref={cameraInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={(e) => {
-              handleFile(e.target.files?.[0]);
-              e.target.value = "";
-            }}
-          />
-          <input
-            ref={uploadInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              handleFile(e.target.files?.[0]);
-              e.target.value = "";
-            }}
-          />
-          <Button
-            size="lg"
-            onClick={() => cameraInputRef.current?.click()}
-            className="h-16 flex-col gap-1 rounded-2xl text-sm shadow-[0_12px_32px_-12px_rgba(40,130,75,0.55)]"
-          >
-            <Camera className="h-5 w-5" />
-            <span className="font-semibold">Capture Meal</span>
-          </Button>
-          <Button
-            size="lg"
-            variant="secondary"
-            onClick={() => uploadInputRef.current?.click()}
-            className="h-16 flex-col gap-1 rounded-2xl text-sm"
-          >
-            <Upload className="h-5 w-5" />
-            <span className="font-semibold">Upload Meal</span>
-          </Button>
-        </div>
-      )}
+      {/* Hidden inputs for manual fallback */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => {
+          handleFile(e.target.files?.[0]);
+          e.target.value = "";
+        }}
+      />
+      <input
+        ref={uploadInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          handleFile(e.target.files?.[0]);
+          e.target.value = "";
+        }}
+      />
+
 
       {meal && (
         <>
@@ -320,6 +398,37 @@ function Dashboard() {
             </Button>
           </div>
         </div>
+      )}
+
+      {/* Manual fallback */}
+      {!meal && (
+        <section className="space-y-2 pt-2" data-testid="manual-fallback">
+          <div className="flex items-center gap-3 px-1">
+            <span className="h-px flex-1 bg-border" />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Not using your device?
+            </p>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <div className="grid grid-cols-2 gap-2.5">
+            <Button
+              variant="outline"
+              onClick={() => cameraInputRef.current?.click()}
+              className="h-10 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              <Camera className="mr-1.5 h-3.5 w-3.5" />
+              Capture manually
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => uploadInputRef.current?.click()}
+              className="h-10 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              <Upload className="mr-1.5 h-3.5 w-3.5" />
+              Upload image
+            </Button>
+          </div>
+        </section>
       )}
     </div>
   );
