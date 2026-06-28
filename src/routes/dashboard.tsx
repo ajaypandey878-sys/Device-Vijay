@@ -163,14 +163,14 @@ function Dashboard() {
               label="Weight"
               value={`${totalWeight}`}
               unit="g"
-              tone="emerald"
+              tone="primary"
             />
             <StatCard
               icon={Flame}
               label="Calories"
               value={`${meal.total_calories}`}
               unit="kcal"
-              tone="amber"
+              tone="accent"
             />
             <StatCard
               icon={Gauge}
