@@ -332,13 +332,8 @@ function Dashboard() {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold leading-tight">Smart Device Status</p>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">
-            {deviceConnected
-              ? "Connected · listening for new meals"
-              : deviceError
-                ? "Disconnected · check device connection"
-                : "Waiting for Smart Device..."}
-          </p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">{statusText}</p>
+
         </div>
         {deviceConnected && (
           <span className="relative flex h-2.5 w-2.5">
