@@ -329,17 +329,13 @@ function FoodCard({
 }) {
   const tone = FOOD_THUMBNAILS[index % FOOD_THUMBNAILS.length];
   return (
-    <div className="flex h-10 items-center gap-2 rounded-2xl bg-secondary/50 p-2 shadow-sm">
-      <div className={`grid h-6 w-6 shrink-0 place-items-center rounded-lg ${tone}`}>
-        <span className="text-xs font-semibold">{food.name.charAt(0)}</span>
+    <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary/50 p-2 text-center shadow-sm">
+      <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${tone}`}>
+        <span className="text-sm font-semibold">{food.name.charAt(0)}</span>
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold leading-none">{food.name}</p>
-        <p className="text-[10px] text-muted-foreground">{food.weight} g</p>
-      </div>
-      <div className="text-right">
-        <p className="text-xs font-semibold">{food.calories}</p>
-        <p className="text-[10px] text-muted-foreground">kcal</p>
+      <div className="min-w-0">
+        <p className="truncate text-xs font-semibold leading-none">{food.name}</p>
+        <p className="text-[10px] text-muted-foreground">{food.weight} g · {food.calories} kcal</p>
       </div>
     </div>
   );
