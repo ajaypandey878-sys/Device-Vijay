@@ -167,7 +167,7 @@ function Dashboard() {
 
       {/* Active meal results */}
       {meal && (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {/* Green calorie ring below preview */}
           <div className="flex flex-col items-center justify-center gap-1" data-testid="calorie-ring">
             <CalorieRing
@@ -182,7 +182,7 @@ function Dashboard() {
 
           {/* Detected food cards */}
           <Card className="rounded-[1.75rem] border-0 shadow-[0_8px_30px_-12px_rgba(16,80,40,0.12)]" data-testid="detected-foods">
-            <CardContent className="space-y-2 p-3">
+            <CardContent className="space-y-1.5 p-3">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Detected foods
@@ -199,7 +199,7 @@ function Dashboard() {
 
           {/* Colorful macro bars */}
           <Card className="rounded-[1.75rem] border-0 shadow-[0_8px_30px_-12px_rgba(16,80,40,0.12)]" data-testid="macro-bars">
-            <CardContent className="space-y-2 p-3">
+            <CardContent className="space-y-1 p-2">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Macros
               </p>
@@ -232,11 +232,11 @@ function Dashboard() {
       {/* Sticky bottom actions */}
       {meal && (
         <div className="fixed bottom-14 left-3 right-3 z-20" data-testid="action-bar">
-          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border/50 bg-background/95 p-2 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.15)] backdrop-blur">
+          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border/50 bg-background/95 p-1 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.15)] backdrop-blur">
             <Button
               variant="outline"
               size="lg"
-              className="h-13 rounded-xl border-2 border-primary/30 bg-background text-foreground hover:bg-muted hover:text-foreground"
+              className="h-11 rounded-xl border-2 border-primary/30 bg-background text-foreground hover:bg-muted hover:text-foreground"
             >
               <Pencil className="mr-2 h-4 w-4" />
               Correct
@@ -245,7 +245,7 @@ function Dashboard() {
               size="lg"
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending}
-              className="h-13 rounded-xl text-sm font-semibold shadow-[0_8px_24px_-10px_rgba(40,120,70,0.4)]"
+              className="h-11 rounded-xl text-sm font-semibold shadow-[0_8px_24px_-10px_rgba(40,120,70,0.4)]"
             >
               {saveMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -270,8 +270,8 @@ function CalorieRing({
   consumed: number;
   goal: number;
 }) {
-  const size = 120;
-  const stroke = 10;
+  const size = 90;
+  const stroke = 9;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const offset = c - (pct / 100) * c;
@@ -311,7 +311,7 @@ function CalorieRing({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <p className="text-xl font-semibold tracking-tight">{consumed}</p>
+        <p className="text-lg font-semibold tracking-tight">{consumed}</p>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           of {goal} kcal
         </p>
@@ -374,9 +374,9 @@ function FoodCard({
 }) {
   const tone = FOOD_TONES[index % FOOD_TONES.length];
   return (
-    <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-secondary/50 p-2.5 text-center shadow-sm" data-testid="food-card">
-      <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${tone}`}>
-        <UtensilsCrossed className="h-5 w-5" />
+    <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary/50 p-1.5 text-center shadow-sm" data-testid="food-card">
+      <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${tone}`}>
+        <UtensilsCrossed className="h-4 w-4" />
       </div>
       <div className="min-w-0">
         <p className="truncate text-xs font-semibold leading-tight">{food.name}</p>
@@ -417,10 +417,10 @@ function Macro({
   };
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       <div className="flex items-center justify-between leading-none">
         <div className="flex items-center gap-1.5">
-          <div className={`grid h-5 w-5 place-items-center rounded-md ${bgTone[color]} ${textMap[color]}`}>
+          <div className={`grid h-4 w-4 place-items-center rounded-md ${bgTone[color]} ${textMap[color]}`}>
             <Icon className="h-3 w-3" />
           </div>
           <span className="text-xs font-semibold">{label}</span>
@@ -429,7 +429,7 @@ function Macro({
           <span className={`font-semibold ${textMap[color]}`}>{value}g</span> / {goal}g
         </span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
+      <div className="h-1 overflow-hidden rounded-full bg-secondary">
         <div
           className={`h-full rounded-full ${colorMap[color]} transition-[width] duration-500`}
           style={{ width: `${pct}%` }}
