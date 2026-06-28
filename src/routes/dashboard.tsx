@@ -201,7 +201,7 @@ function Dashboard() {
 
       {/* Glassmorphic stat cards */}
       <div className="grid grid-cols-3 gap-3">
-        <StatCard icon={Scale} label="Weight" value={totalWeight} unit="g" tone="primary" />
+        <StatCard icon={Scale} label="Weight" value={weightDisplay.value} unit={weightDisplay.unit} tone="primary" />
         <StatCard icon={Flame} label="Calories" value={consumed} unit="kcal" tone="accent" />
         <StatCard icon={Gauge} label="Confidence" value={confidence} unit="%" tone="sky" />
       </div>
