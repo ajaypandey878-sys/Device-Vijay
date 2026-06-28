@@ -94,6 +94,9 @@
   --destructive-foreground: oklch(0.98 0.01 95);
   --success: oklch(0.72 0.17 150);
   --success-foreground: oklch(0.18 0.02 150);
+  --macro-protein: oklch(0.65 0.16 250);
+  --macro-carbs: oklch(0.82 0.16 80);
+  --macro-fats: oklch(0.72 0.16 35);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.72 0.16 145);
