@@ -192,6 +192,12 @@ function Dashboard() {
   const previewSrc = meal?.image_url ?? capturedImage;
 
   const { weight: liveWeight, status: weightStatus } = useLiveWeight();
+  const { status: imageStatus } = useDeviceImage((url) => {
+    setCapturedImage(url);
+  });
+  const deviceConnected = weightStatus === "live" || imageStatus === "live";
+  const deviceError =
+    !deviceConnected && (weightStatus === "error" || imageStatus === "error");
   const totalWeight = meal?.foods.reduce((s, f) => s + f.weight, 0) ?? 0;
   const weightDisplay: { value: number | string; unit: string } =
     totalWeight > 0
