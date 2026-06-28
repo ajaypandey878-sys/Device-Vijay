@@ -37,6 +37,9 @@
   --color-chart-5: var(--chart-5);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-macro-protein: var(--macro-protein);
+  --color-macro-carbs: var(--macro-carbs);
+  --color-macro-fats: var(--macro-fats);
 }
 
 :root {
@@ -59,6 +62,9 @@
   --destructive-foreground: oklch(0.99 0.01 95);
   --success: oklch(0.65 0.17 150);
   --success-foreground: oklch(0.99 0.01 95);
+  --macro-protein: oklch(0.55 0.16 250);    /* protein blue */
+  --macro-carbs: oklch(0.75 0.16 80);       /* carbs amber */
+  --macro-fats: oklch(0.65 0.16 35);       /* fats coral */
   --border: oklch(0.92 0.015 100);
   --input: oklch(0.92 0.015 100);
   --ring: oklch(0.58 0.16 145);
@@ -88,6 +94,9 @@
   --destructive-foreground: oklch(0.98 0.01 95);
   --success: oklch(0.72 0.17 150);
   --success-foreground: oklch(0.18 0.02 150);
+  --macro-protein: oklch(0.65 0.16 250);
+  --macro-carbs: oklch(0.82 0.16 80);
+  --macro-fats: oklch(0.72 0.16 35);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.72 0.16 145);
