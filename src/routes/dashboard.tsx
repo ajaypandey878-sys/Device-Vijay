@@ -81,7 +81,7 @@ function Dashboard() {
   const confidence = meal?.confidence ?? 0;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       {/* Top row: 3 compact stat cards */}
       <div className="grid grid-cols-3 gap-2">
         <StatCard
