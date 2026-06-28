@@ -156,7 +156,7 @@ function Dashboard() {
 
       {/* Active meal results */}
       {meal && (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {/* Calorie ring below preview */}
           <div className="flex justify-center">
             <CalorieRing
@@ -167,7 +167,7 @@ function Dashboard() {
           </div>
 
           {/* Detected food cards */}
-          <div className="grid gap-2">
+          <div className="grid gap-1.5">
             {meal.foods.map((food, i) => (
               <FoodCard key={food.name} food={food} index={i} />
             ))}
