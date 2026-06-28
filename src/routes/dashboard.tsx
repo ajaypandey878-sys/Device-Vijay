@@ -364,12 +364,12 @@ function Dashboard() {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
                   </span>
-                  {meal ? "Live" : "Captured"}
+                  {meal ? "Live" : (sourceBadge ?? "Captured")}
                 </span>
                 {capturedImage && !meal && (
                   <button
                     type="button"
-                    onClick={() => setCapturedImage(null)}
+                    onClick={resetCapture}
                     className="absolute right-3 top-3 rounded-full bg-background/85 px-3 py-1 text-[11px] font-semibold text-foreground shadow-sm backdrop-blur"
                   >
                     Retake
