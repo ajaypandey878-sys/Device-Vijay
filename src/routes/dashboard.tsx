@@ -175,7 +175,7 @@ function Dashboard() {
 
           {/* Compact macro bars */}
           <Card className="rounded-[1.75rem] border-0 shadow-[0_8px_30px_-12px_rgba(16,80,40,0.12)]">
-            <CardContent className="space-y-3 p-4">
+            <CardContent className="space-y-2 p-3">
               <Macro label="Protein" value={meal.protein} goal={80} color="protein" />
               <Macro label="Carbs" value={meal.carbs} goal={250} color="carbs" />
               <Macro label="Fats" value={meal.fats} goal={70} color="fats" />
@@ -186,12 +186,12 @@ function Dashboard() {
 
       {/* Sticky bottom actions */}
       {meal && (
-        <div className="fixed bottom-[4.25rem] left-3 right-3 z-20">
-          <div className="grid grid-cols-2 gap-3 rounded-2xl border border-border/50 bg-background/95 p-2 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.15)] backdrop-blur">
+        <div className="fixed bottom-[3.75rem] left-3 right-3 z-20">
+          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border/50 bg-background/95 p-2 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.15)] backdrop-blur">
             <Button
               variant="outline"
               size="lg"
-              className="h-14 rounded-xl border-2 border-primary/30 bg-background text-foreground hover:bg-muted hover:text-foreground"
+              className="h-13 rounded-xl border-2 border-primary/30 bg-background text-foreground hover:bg-muted hover:text-foreground"
             >
               <Pencil className="mr-2 h-4 w-4" />
               Correct
@@ -200,7 +200,7 @@ function Dashboard() {
               size="lg"
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending}
-              className="h-14 rounded-xl text-sm font-semibold shadow-[0_8px_24px_-10px_rgba(40,120,70,0.4)]"
+              className="h-13 rounded-xl text-sm font-semibold shadow-[0_8px_24px_-10px_rgba(40,120,70,0.4)]"
             >
               {saveMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
