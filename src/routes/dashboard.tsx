@@ -110,10 +110,10 @@ function Dashboard() {
             className="relative w-full bg-gradient-to-br from-secondary/70 via-muted/50 to-secondary/30"
             style={{ height: 220 }}
           >
-            {meal ? (
+            {previewSrc ? (
               <>
                 <img
-                  src={meal.image_url}
+                  src={previewSrc}
                   alt="Captured meal"
                   className="absolute inset-0 h-full w-full object-cover"
                 />
@@ -123,8 +123,17 @@ function Dashboard() {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
                   </span>
-                  Live
+                  {meal ? "Live" : "Captured"}
                 </span>
+                {capturedImage && !meal && (
+                  <button
+                    type="button"
+                    onClick={() => setCapturedImage(null)}
+                    className="absolute right-3 top-3 rounded-full bg-background/85 px-3 py-1 text-[11px] font-semibold text-foreground shadow-sm backdrop-blur"
+                  >
+                    Retake
+                  </button>
+                )}
               </>
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground">
