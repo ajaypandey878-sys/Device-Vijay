@@ -157,9 +157,30 @@ function Dashboard() {
       {/* Capture / Upload buttons */}
       {!meal && (
         <div className="grid grid-cols-2 gap-3">
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              handleFile(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+          <input
+            ref={uploadInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              handleFile(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
           <Button
             size="lg"
-            onClick={processMock}
+            onClick={() => cameraInputRef.current?.click()}
             className="h-16 flex-col gap-1 rounded-2xl text-sm shadow-[0_12px_32px_-12px_rgba(40,130,75,0.55)]"
           >
             <Camera className="h-5 w-5" />
@@ -168,7 +189,7 @@ function Dashboard() {
           <Button
             size="lg"
             variant="secondary"
-            onClick={processMock}
+            onClick={() => uploadInputRef.current?.click()}
             className="h-16 flex-col gap-1 rounded-2xl text-sm"
           >
             <Upload className="h-5 w-5" />
