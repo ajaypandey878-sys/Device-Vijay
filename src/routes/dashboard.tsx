@@ -225,8 +225,8 @@ function CalorieRing({
   consumed: number;
   goal: number;
 }) {
-  const size = 140;
-  const stroke = 12;
+  const size = 120;
+  const stroke = 10;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const offset = c - (pct / 100) * c;
