@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -53,7 +53,10 @@ const DAILY_GOAL = 2000;
 
 function Dashboard() {
   const [meal, setMeal] = useState<typeof MOCK_LIVE | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [, setName] = useState("");
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const saveMealFn = useServerFn(saveMeal);
 
@@ -74,12 +77,24 @@ function Dashboard() {
       toast.success("Meal saved");
       queryClient.invalidateQueries({ queryKey: ["meals"] });
       setMeal(null);
+      setCapturedImage(null);
     },
     onError: (e: { message?: string }) =>
       toast.error(e?.message ?? "Failed to save meal"),
   });
 
-  const processMock = () => setMeal(MOCK_LIVE);
+  
+
+  const handleFile = (file: File | null | undefined) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") setCapturedImage(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const previewSrc = meal?.image_url ?? capturedImage;
 
   const totalWeight = meal?.foods.reduce((s, f) => s + f.weight, 0) ?? 0;
   const consumed = meal?.total_calories ?? 0;
@@ -95,10 +110,10 @@ function Dashboard() {
             className="relative w-full bg-gradient-to-br from-secondary/70 via-muted/50 to-secondary/30"
             style={{ height: 220 }}
           >
-            {meal ? (
+            {previewSrc ? (
               <>
                 <img
-                  src={meal.image_url}
+                  src={previewSrc}
                   alt="Captured meal"
                   className="absolute inset-0 h-full w-full object-cover"
                 />
@@ -108,8 +123,17 @@ function Dashboard() {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
                   </span>
-                  Live
+                  {meal ? "Live" : "Captured"}
                 </span>
+                {capturedImage && !meal && (
+                  <button
+                    type="button"
+                    onClick={() => setCapturedImage(null)}
+                    className="absolute right-3 top-3 rounded-full bg-background/85 px-3 py-1 text-[11px] font-semibold text-foreground shadow-sm backdrop-blur"
+                  >
+                    Retake
+                  </button>
+                )}
               </>
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground">
@@ -133,9 +157,30 @@ function Dashboard() {
       {/* Capture / Upload buttons */}
       {!meal && (
         <div className="grid grid-cols-2 gap-3">
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              handleFile(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+          <input
+            ref={uploadInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              handleFile(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
           <Button
             size="lg"
-            onClick={processMock}
+            onClick={() => cameraInputRef.current?.click()}
             className="h-16 flex-col gap-1 rounded-2xl text-sm shadow-[0_12px_32px_-12px_rgba(40,130,75,0.55)]"
           >
             <Camera className="h-5 w-5" />
@@ -144,7 +189,7 @@ function Dashboard() {
           <Button
             size="lg"
             variant="secondary"
-            onClick={processMock}
+            onClick={() => uploadInputRef.current?.click()}
             className="h-16 flex-col gap-1 rounded-2xl text-sm"
           >
             <Upload className="h-5 w-5" />
