@@ -398,7 +398,7 @@ function StatCard({
 }: {
   icon: React.ElementType;
   label: string;
-  value: number;
+  value: number | string;
   unit: string;
   tone: "primary" | "accent" | "sky";
 }) {
