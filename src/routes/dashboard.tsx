@@ -53,7 +53,10 @@ const DAILY_GOAL = 2000;
 
 function Dashboard() {
   const [meal, setMeal] = useState<typeof MOCK_LIVE | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [, setName] = useState("");
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const saveMealFn = useServerFn(saveMeal);
 
