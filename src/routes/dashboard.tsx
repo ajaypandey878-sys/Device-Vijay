@@ -474,7 +474,7 @@ function Dashboard() {
       )}
 
       {/* Floating glassy action bar */}
-      {meal && (
+      {showActionBar && (
         <div className="fixed bottom-16 left-4 right-4 z-20 md:left-1/2 md:max-w-3xl md:-translate-x-1/2 md:px-6" data-testid="action-bar">
           <div className="grid grid-cols-2 gap-2.5 rounded-3xl border border-white/40 bg-background/60 p-2 shadow-[0_20px_50px_-20px_rgba(16,80,40,0.45)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/55">
             <Button
@@ -503,7 +503,7 @@ function Dashboard() {
       )}
 
       {/* Manual fallback */}
-      {!meal && (
+      {!capturedImage && !meal && (
         <section className="space-y-2 pt-2" data-testid="manual-fallback">
           <div className="flex items-center gap-3 px-1">
             <span className="h-px flex-1 bg-border" />
