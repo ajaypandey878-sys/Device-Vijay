@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
 import { saveMeal } from "@/lib/meals.functions";
+import { estimateWeight } from "@/lib/estimate-weight.functions";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/dashboard")({
