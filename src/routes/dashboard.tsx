@@ -224,7 +224,7 @@ function Dashboard() {
             <Button
               variant="outline"
               size="lg"
-              className="h-16 rounded-xl border-2 text-base"
+              className="h-16 rounded-xl border-2 border-primary/30 bg-background text-foreground hover:bg-muted hover:text-foreground"
             >
               <Pencil className="mr-2 h-4 w-4" />
               Correct
