@@ -224,7 +224,7 @@ function Dashboard() {
             <Button
               variant="outline"
               size="lg"
-              className="h-14 rounded-xl border-2 text-base"
+              className="h-16 rounded-xl border-2 text-base"
             >
               <Pencil className="mr-2 h-4 w-4" />
               Correct
@@ -233,7 +233,7 @@ function Dashboard() {
               size="lg"
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending}
-              className="h-14 rounded-xl text-base shadow-[0_8px_24px_-10px_rgba(40,120,70,0.45)]"
+              className="h-16 rounded-xl text-base shadow-[0_8px_24px_-10px_rgba(40,120,70,0.45)]"
             >
               {saveMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
