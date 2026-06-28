@@ -358,11 +358,11 @@ function StatCard({
 }
 
 const FOOD_TONES = [
-  "bg-emerald-100 text-emerald-700",
-  "bg-amber-100 text-amber-700",
-  "bg-rose-100 text-rose-700",
-  "bg-sky-100 text-sky-700",
-  "bg-violet-100 text-violet-700",
+  "bg-chart-1/10 text-chart-1",
+  "bg-chart-2/10 text-chart-2",
+  "bg-chart-3/10 text-chart-3",
+  "bg-chart-4/10 text-chart-4",
+  "bg-chart-5/10 text-chart-5",
 ];
 
 function FoodCard({
@@ -374,7 +374,7 @@ function FoodCard({
 }) {
   const tone = FOOD_TONES[index % FOOD_TONES.length];
   return (
-    <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-secondary/50 p-2.5 text-center shadow-sm">
+    <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-secondary/50 p-2.5 text-center shadow-sm" data-testid="food-card">
       <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${tone}`}>
         <UtensilsCrossed className="h-5 w-5" />
       </div>
