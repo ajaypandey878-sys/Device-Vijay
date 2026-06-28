@@ -217,7 +217,7 @@ function Dashboard() {
 
       {/* Sticky bottom actions */}
       {meal && (
-        <div className="sticky bottom-[4.5rem] z-20 pt-2">
+        <div className="fixed bottom-[4.5rem] left-4 right-4 z-20">
           <div className="grid grid-cols-2 gap-3 rounded-2xl border border-border/60 bg-background/90 p-2 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.18)] backdrop-blur">
             <Button
               variant="outline"
