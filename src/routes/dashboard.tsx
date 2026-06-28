@@ -6,16 +6,10 @@ import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
   Camera,
   Upload,
   Pencil,
   Save,
-  ChevronDown,
   Loader2,
   ImageIcon,
   Scale,
@@ -25,7 +19,6 @@ import {
 import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
 import { saveMeal } from "@/lib/meals.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
@@ -55,14 +48,11 @@ const DAILY_GOAL = 2000;
 
 function Dashboard() {
   const [meal, setMeal] = useState<typeof MOCK_LIVE | null>(null);
-  const [greeting, setGreeting] = useState("Hello");
   const [name, setName] = useState("");
   const queryClient = useQueryClient();
   const saveMealFn = useServerFn(saveMeal);
 
   useEffect(() => {
-    const h = new Date().getHours();
-    setGreeting(h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening");
     supabase.auth.getUser().then(({ data }) => {
       const n =
         (data.user?.user_metadata?.full_name as string) ??
@@ -88,43 +78,52 @@ function Dashboard() {
   const totalWeight = meal?.foods.reduce((s, f) => s + f.weight, 0) ?? 0;
   const consumed = meal?.total_calories ?? 0;
   const ringPct = Math.min(100, (consumed / DAILY_GOAL) * 100);
+  const confidence = meal?.confidence ?? 0;
 
   return (
-    <div className={`space-y-6 pb-8 ${meal ? "pb-40" : ""}`}>
-      {/* Greeting + Calorie ring */}
-      <header className="space-y-4">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">
-            {format(new Date(), "EEEE, MMMM d")}
-          </p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-            {greeting}
-            {name ? `, ${name.split(" ")[0]}` : ""}
-          </h1>
-        </div>
+    <div className="space-y-1.5">
+      {/* Top row: 3 compact stat cards */}
+      <div className="grid grid-cols-3 gap-2">
+        <StatCard
+          icon={Scale}
+          label="Weight"
+          value={totalWeight}
+          unit="g"
+          tone="primary"
+        />
+        <StatCard
+          icon={Flame}
+          label="Calories"
+          value={consumed}
+          unit="kcal"
+          tone="accent"
+        />
+        <StatCard
+          icon={Gauge}
+          label="Confidence"
+          value={confidence}
+          unit="%"
+          tone="sky"
+        />
+      </div>
 
-        <div className="flex justify-center">
-          <CalorieRing pct={ringPct} consumed={consumed} goal={DAILY_GOAL} />
-        </div>
-      </header>
-
-      {/* Live meal preview */}
-      <Card className="overflow-hidden rounded-[2rem] border-0 shadow-[0_12px_40px_-12px_rgba(16,80,40,0.18)]">
+      {/* Live meal preview card */}
+      <Card className="overflow-hidden rounded-[1.75rem] border-0 shadow-[0_12px_40px_-12px_rgba(16,80,40,0.16)]">
         <div
-          className="grid w-full place-items-center bg-gradient-to-br from-secondary/70 via-muted/60 to-secondary/40"
-          style={{ height: 320 }}
+          className="grid w-full place-items-center bg-gradient-to-br from-secondary/70 via-muted/50 to-secondary/30"
+          style={{ height: 240 }}
         >
           {meal ? (
-            <div className="flex flex-col items-center gap-3 text-muted-foreground">
-              <div className="grid h-20 w-20 place-items-center rounded-full bg-background/80 shadow-sm">
-                <ImageIcon className="h-9 w-9" />
+            <div className="flex flex-col items-center gap-2 text-muted-foreground">
+              <div className="grid h-16 w-16 place-items-center rounded-full bg-background/90 shadow-sm">
+                <ImageIcon className="h-7 w-7" />
               </div>
               <p className="text-sm font-medium">Live meal preview</p>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-4 text-muted-foreground">
-              <div className="grid h-20 w-20 place-items-center rounded-full bg-background/80 shadow-sm">
-                <Camera className="h-9 w-9" />
+            <div className="flex flex-col items-center gap-3 text-muted-foreground">
+              <div className="grid h-16 w-16 place-items-center rounded-full bg-background/90 shadow-sm">
+                <Camera className="h-7 w-7" />
               </div>
               <p className="text-sm font-medium">Capture or upload to begin</p>
             </div>
@@ -132,83 +131,51 @@ function Dashboard() {
         </div>
       </Card>
 
-      {/* Capture / Upload */}
+      {/* Capture / Upload buttons */}
       {!meal && (
         <div className="grid grid-cols-2 gap-3">
           <Button
             size="lg"
             onClick={processMock}
-            className="h-20 flex-col gap-1.5 rounded-2xl text-base shadow-[0_8px_28px_-12px_rgba(40,130,75,0.5)]"
+            className="h-16 flex-col gap-1 rounded-2xl text-sm shadow-[0_8px_28px_-12px_rgba(40,130,75,0.45)]"
           >
-            <Camera className="h-6 w-6" />
-            <span className="font-medium">Capture Meal</span>
+            <Camera className="h-5 w-5" />
+            <span className="font-semibold">Capture Meal</span>
           </Button>
           <Button
             size="lg"
             variant="secondary"
             onClick={processMock}
-            className="h-20 flex-col gap-1.5 rounded-2xl text-base"
+            className="h-16 flex-col gap-1 rounded-2xl text-sm"
           >
-            <Upload className="h-6 w-6" />
-            <span className="font-medium">Upload Meal</span>
+            <Upload className="h-5 w-5" />
+            <span className="font-semibold">Upload Meal</span>
           </Button>
         </div>
       )}
 
-      {/* Meal result */}
+      {/* Active meal results */}
       {meal && (
-        <div className="space-y-4">
-          {/* Compact stats */}
-          <div className="grid grid-cols-3 gap-3">
-            <StatCard
-              icon={Scale}
-              label="Weight"
-              value={`${totalWeight}`}
-              unit="g"
-              tone="primary"
-            />
-            <StatCard
-              icon={Flame}
-              label="Calories"
-              value={`${meal.total_calories}`}
-              unit="kcal"
-              tone="accent"
-            />
-            <StatCard
-              icon={Gauge}
-              label="Confidence"
-              value={`${meal.confidence}`}
-              unit="%"
-              tone="sky"
+        <div className="space-y-1.5">
+          {/* Calorie ring below preview */}
+          <div className="flex justify-center">
+            <CalorieRing
+              pct={ringPct}
+              consumed={consumed}
+              goal={DAILY_GOAL}
             />
           </div>
 
-          {/* Detected foods (collapsible) */}
-          <Collapsible defaultOpen>
-            <Card className="rounded-[2rem] border-0 shadow-[0_12px_40px_-16px_rgba(16,80,40,0.14)]">
-              <CollapsibleTrigger className="group flex w-full items-center justify-between p-5">
-                <div className="text-left">
-                  <p className="text-base font-semibold">Detected foods</p>
-                  <p className="text-xs text-muted-foreground">
-                    {meal.foods.length} items detected
-                  </p>
-                </div>
-                <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="grid gap-3 px-5 pb-5">
-                  {meal.foods.map((f, i) => (
-                    <FoodCard key={f.name} food={f} index={i} />
-                  ))}
-                </div>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
+          {/* Detected food cards */}
+          <div className="grid grid-cols-3 gap-1.5">
+            {meal.foods.map((food, i) => (
+              <FoodCard key={food.name} food={food} index={i} />
+            ))}
+          </div>
 
-          {/* Macros */}
-          <Card className="rounded-[2rem] border-0 shadow-[0_12px_40px_-16px_rgba(16,80,40,0.14)]">
-            <CardContent className="space-y-5 p-5">
-              <p className="text-base font-semibold">Macros</p>
+          {/* Compact macro bars */}
+          <Card className="rounded-[1.75rem] border-0 shadow-[0_8px_30px_-12px_rgba(16,80,40,0.12)]">
+            <CardContent className="space-y-1 p-2">
               <Macro label="Protein" value={meal.protein} goal={80} color="protein" />
               <Macro label="Carbs" value={meal.carbs} goal={250} color="carbs" />
               <Macro label="Fats" value={meal.fats} goal={70} color="fats" />
@@ -219,12 +186,12 @@ function Dashboard() {
 
       {/* Sticky bottom actions */}
       {meal && (
-        <div className="fixed bottom-[4.5rem] left-4 right-4 z-20">
-          <div className="grid grid-cols-2 gap-3 rounded-2xl border border-border/60 bg-background/90 p-2 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.18)] backdrop-blur">
+        <div className="fixed bottom-14 left-3 right-3 z-20">
+          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border/50 bg-background/95 p-2 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.15)] backdrop-blur">
             <Button
               variant="outline"
               size="lg"
-              className="h-16 rounded-xl border-2 border-primary/30 bg-background text-foreground hover:bg-muted hover:text-foreground"
+              className="h-12 rounded-xl border-2 border-primary/30 bg-background text-foreground hover:bg-muted hover:text-foreground"
             >
               <Pencil className="mr-2 h-4 w-4" />
               Correct
@@ -233,7 +200,7 @@ function Dashboard() {
               size="lg"
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending}
-              className="h-16 rounded-xl text-base shadow-[0_8px_24px_-10px_rgba(40,120,70,0.45)]"
+              className="h-12 rounded-xl text-sm font-semibold shadow-[0_8px_24px_-10px_rgba(40,120,70,0.4)]"
             >
               {saveMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -258,8 +225,8 @@ function CalorieRing({
   consumed: number;
   goal: number;
 }) {
-  const size = 220;
-  const stroke = 18;
+  const size = 120;
+  const stroke = 10;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const offset = c - (pct / 100) * c;
@@ -267,7 +234,7 @@ function CalorieRing({
 
   return (
     <div
-      className="relative rounded-full shadow-[0_16px_40px_-16px_rgba(40,130,75,0.35)]"
+      className="relative rounded-full shadow-[0_12px_30px_-12px_rgba(40,130,75,0.35)]"
       style={{ width: size, height: size }}
     >
       <svg width={size} height={size} className="-rotate-90">
@@ -299,8 +266,8 @@ function CalorieRing({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <p className="text-4xl font-semibold tracking-tight">{consumed}</p>
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <p className="text-xl font-semibold tracking-tight">{consumed}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           of {goal} kcal
         </p>
       </div>
@@ -317,7 +284,7 @@ function StatCard({
 }: {
   icon: React.ElementType;
   label: string;
-  value: string;
+  value: number;
   unit: string;
   tone: "primary" | "accent" | "sky";
 }) {
@@ -328,17 +295,17 @@ function StatCard({
   };
 
   return (
-    <Card className="rounded-2xl border-0 shadow-[0_8px_24px_-12px_rgba(16,80,40,0.12)]">
-      <CardContent className="flex flex-col items-center gap-2 p-4">
-        <div className={`grid h-9 w-9 place-items-center rounded-xl ${toneClasses[tone]}`}>
-          <Icon className="h-5 w-5" />
+    <Card className="h-16 rounded-2xl border-0 shadow-[0_6px_18px_-8px_rgba(16,80,40,0.12)]">
+      <CardContent className="flex h-full flex-col items-center justify-center gap-1 p-2">
+        <div className={`grid h-6 w-6 place-items-center rounded-lg ${toneClasses[tone]}`}>
+          <Icon className="h-3.5 w-3.5" />
         </div>
         <div className="text-center">
-          <p className="text-xl font-semibold tracking-tight">
+          <p className="text-sm font-semibold leading-none">
             {value}
-            <span className="ml-0.5 text-xs font-medium text-muted-foreground">{unit}</span>
+            <span className="ml-0.5 text-[10px] font-medium text-muted-foreground">{unit}</span>
           </p>
-          <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+          <p className="text-[10px] font-medium leading-none text-muted-foreground">{label}</p>
         </div>
       </CardContent>
     </Card>
@@ -362,17 +329,13 @@ function FoodCard({
 }) {
   const tone = FOOD_THUMBNAILS[index % FOOD_THUMBNAILS.length];
   return (
-    <div className="flex items-center gap-4 rounded-2xl bg-secondary/50 p-3">
-      <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-xl ${tone}`}>
-        <span className="text-lg font-semibold">{food.name.charAt(0)}</span>
+    <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary/50 p-2 text-center shadow-sm">
+      <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${tone}`}>
+        <span className="text-sm font-semibold">{food.name.charAt(0)}</span>
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="font-semibold">{food.name}</p>
-        <p className="text-xs text-muted-foreground">{food.weight} g</p>
-      </div>
-      <div className="text-right">
-        <p className="text-sm font-semibold">{food.calories}</p>
-        <p className="text-xs text-muted-foreground">kcal</p>
+      <div className="min-w-0">
+        <p className="truncate text-xs font-semibold leading-tight">{food.name}</p>
+        <p className="text-[10px] text-muted-foreground">{food.weight} g · {food.calories} kcal</p>
       </div>
     </div>
   );
@@ -402,14 +365,14 @@ function Macro({
   };
 
   return (
-    <div>
-      <div className="mb-2 flex items-baseline justify-between">
-        <span className="text-sm font-semibold">{label}</span>
-        <span className="text-sm text-muted-foreground">
+    <div className="space-y-1">
+      <div className="flex items-baseline justify-between leading-none">
+        <span className="text-xs font-semibold">{label}</span>
+        <span className="text-[10px] text-muted-foreground">
           <span className={`font-semibold ${textMap[color]}`}>{value}g</span> / {goal}g
         </span>
       </div>
-      <div className="h-2.5 overflow-hidden rounded-full bg-secondary">
+      <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
         <div
           className={`h-full rounded-full ${colorMap[color]} transition-[width] duration-500`}
           style={{ width: `${pct}%` }}
