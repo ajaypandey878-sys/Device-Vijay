@@ -373,6 +373,20 @@ function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [capturedImage, meal]);
 
+  // Phase machine for animated device status pill
+  type Phase = "idle" | "connected" | "measuring" | "stabilizing" | "capturing" | "processing";
+  const phase: Phase = (() => {
+    if (saveMutation.isPending || estimateMutation.isPending) return "processing";
+    if (captureSource === "device" || meal) return "capturing";
+    if (lockedWeight != null) return "capturing";
+    if (liveWeight != null && liveWeight > 0) return "stabilizing";
+    if (weightStatus === "live") return "measuring";
+    if (deviceConnected) return "connected";
+    return "idle";
+  })();
+
+  const confTone: "danger" | "warn" | "ok" =
+    confidence >= 80 ? "ok" : confidence >= 50 ? "warn" : "danger";
 
   return (
     <div className={showActionBar ? "space-y-5 pb-36" : "space-y-5"}>
@@ -402,21 +416,25 @@ function Dashboard() {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold leading-tight">Smart Device Status</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">{statusText}</p>
-
         </div>
-        {deviceConnected && (
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
-          </span>
-        )}
+        <PhasePill phase={phase} />
       </div>
+
+      {/* Hero: live weight */}
+      <WeightHero
+        display={weightDisplay}
+        phase={phase}
+        live={liveWeight}
+        locked={lockedWeight}
+      />
 
       {/* Edge-to-edge meal preview */}
       <div className="-mx-4 md:-mx-6" data-testid="meal-preview">
         <div className="overflow-hidden rounded-[20px] md:mx-0">
           <div
-            className="relative w-full bg-gradient-to-br from-secondary/70 via-muted/50 to-secondary/30"
+            className={`relative w-full bg-gradient-to-br from-secondary/70 via-muted/50 to-secondary/30 ${
+              previewSrc ? "glow-border" : ""
+            }`}
             style={{ height: 220 }}
           >
             {previewSrc ? (
@@ -424,7 +442,7 @@ function Dashboard() {
                 <img
                   src={previewSrc}
                   alt="Captured meal"
-                  className="absolute inset-0 h-full w-full object-cover"
+                  className="absolute inset-0 h-full w-full object-cover animate-fade-in"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
                 <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-background/85 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary shadow-sm backdrop-blur">
@@ -445,22 +463,36 @@ function Dashboard() {
                 )}
               </>
             ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-                <div className="grid h-16 w-16 place-items-center rounded-full bg-background/90 shadow-sm">
-                  <Camera className="h-7 w-7" />
+              <>
+                <div className="shimmer absolute inset-0 opacity-60" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                  <div className="grid h-16 w-16 place-items-center rounded-full bg-background/90 shadow-sm">
+                    <Camera className="h-7 w-7" />
+                  </div>
+                  <p className="text-sm font-medium">
+                    {phase === "stabilizing"
+                      ? "Stabilizing weight…"
+                      : phase === "capturing"
+                        ? "Capturing frame…"
+                        : "Capture or upload to begin"}
+                  </p>
                 </div>
-                <p className="text-sm font-medium">Capture or upload to begin</p>
-              </div>
+              </>
             )}
           </div>
         </div>
       </div>
 
-      {/* Glassmorphic stat cards */}
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard icon={Scale} label="Weight" value={weightDisplay.value} unit={weightDisplay.unit} tone="primary" />
+      {/* Secondary stat cards (Weight is hero above) */}
+      <div className="grid grid-cols-2 gap-3">
         <StatCard icon={Flame} label="Calories" value={consumed} unit="kcal" tone="accent" />
-        <StatCard icon={Gauge} label="Confidence" value={confidence} unit="%" tone="sky" />
+        <StatCard
+          icon={Gauge}
+          label="Confidence"
+          value={confidence}
+          unit="%"
+          tone={confTone === "ok" ? "primary" : confTone === "warn" ? "accent" : "danger"}
+        />
       </div>
 
       {/* Persistent Daily Macros */}
@@ -473,6 +505,7 @@ function Dashboard() {
           </CardContent>
         </Card>
       </section>
+
 
       {/* Hidden inputs for manual fallback */}
       <input
@@ -679,12 +712,13 @@ function StatCard({
   label: string;
   value: number | string;
   unit: string;
-  tone: "primary" | "accent" | "sky";
+  tone: "primary" | "accent" | "sky" | "danger";
 }) {
   const toneClasses = {
     primary: "bg-primary/15 text-primary",
     accent: "bg-accent/15 text-accent",
     sky: "bg-chart-4/15 text-chart-4",
+    danger: "bg-destructive/15 text-destructive",
   };
 
   return (
@@ -788,6 +822,107 @@ function Macro({
         <div
           className={`h-full rounded-full bg-gradient-to-r ${fromMap[color]} transition-[width] duration-700`}
           style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function PhasePill({
+  phase,
+}: {
+  phase: "idle" | "connected" | "measuring" | "stabilizing" | "capturing" | "processing";
+}) {
+  const map = {
+    idle: { label: "Idle", dot: "bg-muted-foreground", text: "text-muted-foreground", bg: "bg-muted/60" },
+    connected: { label: "Connected", dot: "bg-primary", text: "text-primary", bg: "bg-primary/12" },
+    measuring: { label: "Measuring", dot: "bg-chart-4", text: "text-chart-4", bg: "bg-chart-4/12" },
+    stabilizing: { label: "Stabilizing", dot: "bg-accent", text: "text-accent", bg: "bg-accent/15" },
+    capturing: { label: "Capturing", dot: "bg-primary", text: "text-primary", bg: "bg-primary/15" },
+    processing: { label: "Processing", dot: "bg-accent", text: "text-accent", bg: "bg-accent/15" },
+  } as const;
+  const s = map[phase];
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full ${s.bg} px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${s.text}`}
+      data-testid="phase-pill"
+    >
+      <span className={`phase-dot inline-block h-1.5 w-1.5 rounded-full ${s.dot}`} />
+      {s.label}
+    </span>
+  );
+}
+
+function WeightHero({
+  display,
+  phase,
+  live,
+  locked,
+}: {
+  display: { value: number | string; unit: string };
+  phase: "idle" | "connected" | "measuring" | "stabilizing" | "capturing" | "processing";
+  live: number | null;
+  locked: number | null;
+}) {
+  const active = phase === "measuring" || phase === "stabilizing" || phase === "capturing";
+  return (
+    <div
+      className="relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/12 via-background to-accent/10 p-5 shadow-[0_20px_60px_-28px_rgba(40,130,75,0.55)]"
+      data-testid="weight-hero"
+    >
+      <div
+        className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full opacity-70 blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle, color-mix(in oklab, var(--primary) 35%, transparent), transparent 70%)",
+        }}
+      />
+      <div className="relative flex items-start justify-between">
+        <div className="flex items-center gap-2">
+          <div className="grid h-9 w-9 place-items-center rounded-2xl bg-primary/15 text-primary shadow-sm">
+            <Scale className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Live Weight
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              {locked != null
+                ? `Locked at ${locked}g`
+                : live != null
+                  ? "Streaming from device"
+                  : "Awaiting reading"}
+            </p>
+          </div>
+        </div>
+        {active && (
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
+          </span>
+        )}
+      </div>
+      <div className="relative mt-3 flex items-baseline gap-2">
+        <p className="text-5xl font-semibold leading-none tracking-tight tabular-nums text-foreground">
+          {display.value}
+        </p>
+        {display.unit && (
+          <span className="text-lg font-medium text-muted-foreground">{display.unit}</span>
+        )}
+      </div>
+      <div className="relative mt-4 h-1.5 overflow-hidden rounded-full bg-primary/10">
+        <div
+          className={`h-full rounded-full bg-gradient-to-r from-primary to-success transition-[width] duration-700 ${
+            phase === "stabilizing" ? "shimmer" : ""
+          }`}
+          style={{
+            width:
+              locked != null
+                ? "100%"
+                : typeof display.value === "number"
+                  ? `${Math.min(100, (display.value / 500) * 100)}%`
+                  : "12%",
+          }}
         />
       </div>
     </div>
