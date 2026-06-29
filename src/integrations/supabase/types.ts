@@ -20,6 +20,7 @@ export type Database = {
           id: string
           last_seen_at: string | null
           name: string
+          status: string
           token_hash: string
           token_prefix: string
           user_id: string
@@ -29,6 +30,7 @@ export type Database = {
           id?: string
           last_seen_at?: string | null
           name?: string
+          status?: string
           token_hash: string
           token_prefix: string
           user_id: string
@@ -38,6 +40,7 @@ export type Database = {
           id?: string
           last_seen_at?: string | null
           name?: string
+          status?: string
           token_hash?: string
           token_prefix?: string
           user_id?: string
@@ -138,6 +141,8 @@ export type Database = {
           error: string | null
           id: string
           image_path: string | null
+          locked_weight_grams: number | null
+          needs_correction: boolean
           nutrients: Json | null
           predictions: Json | null
           status: string
@@ -158,6 +163,8 @@ export type Database = {
           error?: string | null
           id?: string
           image_path?: string | null
+          locked_weight_grams?: number | null
+          needs_correction?: boolean
           nutrients?: Json | null
           predictions?: Json | null
           status?: string
@@ -178,6 +185,8 @@ export type Database = {
           error?: string | null
           id?: string
           image_path?: string | null
+          locked_weight_grams?: number | null
+          needs_correction?: boolean
           nutrients?: Json | null
           predictions?: Json | null
           status?: string
@@ -196,6 +205,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      nutrition_db: {
+        Row: {
+          carbs_g: number
+          created_at: string
+          density: number | null
+          fats_g: number
+          food_name: string
+          id: string
+          kcal_per_100g: number
+          protein_g: number
+          updated_at: string
+        }
+        Insert: {
+          carbs_g?: number
+          created_at?: string
+          density?: number | null
+          fats_g?: number
+          food_name: string
+          id?: string
+          kcal_per_100g: number
+          protein_g?: number
+          updated_at?: string
+        }
+        Update: {
+          carbs_g?: number
+          created_at?: string
+          density?: number | null
+          fats_g?: number
+          food_name?: string
+          id?: string
+          kcal_per_100g?: number
+          protein_g?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
