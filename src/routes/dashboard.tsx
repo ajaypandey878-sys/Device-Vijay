@@ -827,3 +827,104 @@ function Macro({
     </div>
   );
 }
+
+function PhasePill({
+  phase,
+}: {
+  phase: "idle" | "connected" | "measuring" | "stabilizing" | "capturing" | "processing";
+}) {
+  const map = {
+    idle: { label: "Idle", dot: "bg-muted-foreground", text: "text-muted-foreground", bg: "bg-muted/60" },
+    connected: { label: "Connected", dot: "bg-primary", text: "text-primary", bg: "bg-primary/12" },
+    measuring: { label: "Measuring", dot: "bg-chart-4", text: "text-chart-4", bg: "bg-chart-4/12" },
+    stabilizing: { label: "Stabilizing", dot: "bg-accent", text: "text-accent", bg: "bg-accent/15" },
+    capturing: { label: "Capturing", dot: "bg-primary", text: "text-primary", bg: "bg-primary/15" },
+    processing: { label: "Processing", dot: "bg-accent", text: "text-accent", bg: "bg-accent/15" },
+  } as const;
+  const s = map[phase];
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full ${s.bg} px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${s.text}`}
+      data-testid="phase-pill"
+    >
+      <span className={`phase-dot inline-block h-1.5 w-1.5 rounded-full ${s.dot}`} />
+      {s.label}
+    </span>
+  );
+}
+
+function WeightHero({
+  display,
+  phase,
+  live,
+  locked,
+}: {
+  display: { value: number | string; unit: string };
+  phase: "idle" | "connected" | "measuring" | "stabilizing" | "capturing" | "processing";
+  live: number | null;
+  locked: number | null;
+}) {
+  const active = phase === "measuring" || phase === "stabilizing" || phase === "capturing";
+  return (
+    <div
+      className="relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/12 via-background to-accent/10 p-5 shadow-[0_20px_60px_-28px_rgba(40,130,75,0.55)]"
+      data-testid="weight-hero"
+    >
+      <div
+        className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full opacity-70 blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle, color-mix(in oklab, var(--primary) 35%, transparent), transparent 70%)",
+        }}
+      />
+      <div className="relative flex items-start justify-between">
+        <div className="flex items-center gap-2">
+          <div className="grid h-9 w-9 place-items-center rounded-2xl bg-primary/15 text-primary shadow-sm">
+            <Scale className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Live Weight
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              {locked != null
+                ? `Locked at ${locked}g`
+                : live != null
+                  ? "Streaming from device"
+                  : "Awaiting reading"}
+            </p>
+          </div>
+        </div>
+        {active && (
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
+          </span>
+        )}
+      </div>
+      <div className="relative mt-3 flex items-baseline gap-2">
+        <p className="text-5xl font-semibold leading-none tracking-tight tabular-nums text-foreground">
+          {display.value}
+        </p>
+        {display.unit && (
+          <span className="text-lg font-medium text-muted-foreground">{display.unit}</span>
+        )}
+      </div>
+      <div className="relative mt-4 h-1.5 overflow-hidden rounded-full bg-primary/10">
+        <div
+          className={`h-full rounded-full bg-gradient-to-r from-primary to-success transition-[width] duration-700 ${
+            phase === "stabilizing" ? "shimmer" : ""
+          }`}
+          style={{
+            width:
+              locked != null
+                ? "100%"
+                : typeof display.value === "number"
+                  ? `${Math.min(100, (display.value / 500) * 100)}%`
+                  : "12%",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
