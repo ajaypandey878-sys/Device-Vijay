@@ -15,6 +15,9 @@ import { Route as HistoryRouteImport } from './routes/history'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MealIdRouteImport } from './routes/meal.$id'
+import { Route as ApiPublicDeviceWeightRouteImport } from './routes/api/public/device/weight'
+import { Route as ApiPublicDeviceConnectRouteImport } from './routes/api/public/device/connect'
+import { Route as ApiPublicDeviceCaptureRouteImport } from './routes/api/public/device/capture'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -46,6 +49,21 @@ const MealIdRoute = MealIdRouteImport.update({
   path: '/meal/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicDeviceWeightRoute = ApiPublicDeviceWeightRouteImport.update({
+  id: '/api/public/device/weight',
+  path: '/api/public/device/weight',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDeviceConnectRoute = ApiPublicDeviceConnectRouteImport.update({
+  id: '/api/public/device/connect',
+  path: '/api/public/device/connect',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDeviceCaptureRoute = ApiPublicDeviceCaptureRouteImport.update({
+  id: '/api/public/device/capture',
+  path: '/api/public/device/capture',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +72,9 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/meal/$id': typeof MealIdRoute
+  '/api/public/device/capture': typeof ApiPublicDeviceCaptureRoute
+  '/api/public/device/connect': typeof ApiPublicDeviceConnectRoute
+  '/api/public/device/weight': typeof ApiPublicDeviceWeightRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +83,9 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/meal/$id': typeof MealIdRoute
+  '/api/public/device/capture': typeof ApiPublicDeviceCaptureRoute
+  '/api/public/device/connect': typeof ApiPublicDeviceConnectRoute
+  '/api/public/device/weight': typeof ApiPublicDeviceWeightRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +95,9 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/meal/$id': typeof MealIdRoute
+  '/api/public/device/capture': typeof ApiPublicDeviceCaptureRoute
+  '/api/public/device/connect': typeof ApiPublicDeviceConnectRoute
+  '/api/public/device/weight': typeof ApiPublicDeviceWeightRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,8 +108,20 @@ export interface FileRouteTypes {
     | '/login'
     | '/profile'
     | '/meal/$id'
+    | '/api/public/device/capture'
+    | '/api/public/device/connect'
+    | '/api/public/device/weight'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/history' | '/login' | '/profile' | '/meal/$id'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/history'
+    | '/login'
+    | '/profile'
+    | '/meal/$id'
+    | '/api/public/device/capture'
+    | '/api/public/device/connect'
+    | '/api/public/device/weight'
   id:
     | '__root__'
     | '/'
@@ -91,6 +130,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/profile'
     | '/meal/$id'
+    | '/api/public/device/capture'
+    | '/api/public/device/connect'
+    | '/api/public/device/weight'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -100,6 +142,9 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
   MealIdRoute: typeof MealIdRoute
+  ApiPublicDeviceCaptureRoute: typeof ApiPublicDeviceCaptureRoute
+  ApiPublicDeviceConnectRoute: typeof ApiPublicDeviceConnectRoute
+  ApiPublicDeviceWeightRoute: typeof ApiPublicDeviceWeightRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -146,6 +191,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MealIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/device/weight': {
+      id: '/api/public/device/weight'
+      path: '/api/public/device/weight'
+      fullPath: '/api/public/device/weight'
+      preLoaderRoute: typeof ApiPublicDeviceWeightRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/device/connect': {
+      id: '/api/public/device/connect'
+      path: '/api/public/device/connect'
+      fullPath: '/api/public/device/connect'
+      preLoaderRoute: typeof ApiPublicDeviceConnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/device/capture': {
+      id: '/api/public/device/capture'
+      path: '/api/public/device/capture'
+      fullPath: '/api/public/device/capture'
+      preLoaderRoute: typeof ApiPublicDeviceCaptureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -156,6 +222,9 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
   MealIdRoute: MealIdRoute,
+  ApiPublicDeviceCaptureRoute: ApiPublicDeviceCaptureRoute,
+  ApiPublicDeviceConnectRoute: ApiPublicDeviceConnectRoute,
+  ApiPublicDeviceWeightRoute: ApiPublicDeviceWeightRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
