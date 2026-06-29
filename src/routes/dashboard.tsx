@@ -712,12 +712,13 @@ function StatCard({
   label: string;
   value: number | string;
   unit: string;
-  tone: "primary" | "accent" | "sky";
+  tone: "primary" | "accent" | "sky" | "danger";
 }) {
   const toneClasses = {
     primary: "bg-primary/15 text-primary",
     accent: "bg-accent/15 text-accent",
     sky: "bg-chart-4/15 text-chart-4",
+    danger: "bg-destructive/15 text-destructive",
   };
 
   return (
