@@ -103,6 +103,56 @@ function useLiveWeight() {
   return { weight, status };
 }
 
+// Weight stabilization: if the live weight stays within ±2g for 3 seconds,
+// emit a "locked" weight. Used to auto-trigger Pi camera capture.
+function useStableWeight(weight: number | null, toleranceG = 2, windowMs = 3000) {
+  const [lockedWeight, setLockedWeight] = useState<number | null>(null);
+  const samplesRef = useRef<{ value: number; t: number }[]>([]);
+
+  useEffect(() => {
+    if (weight == null || weight <= 0) {
+      samplesRef.current = [];
+      setLockedWeight(null);
+      return;
+    }
+    const now = Date.now();
+    const samples = samplesRef.current;
+    samples.push({ value: weight, t: now });
+    // keep only the trailing windowMs of samples
+    while (samples.length && now - samples[0].t > windowMs) samples.shift();
+    if (samples.length < 2 || now - samples[0].t < windowMs) return;
+    const min = Math.min(...samples.map((s) => s.value));
+    const max = Math.max(...samples.map((s) => s.value));
+    if (max - min <= toleranceG * 2) {
+      const avg = Math.round(samples.reduce((s, x) => s + x.value, 0) / samples.length);
+      setLockedWeight((prev) => (prev === avg ? prev : avg));
+    }
+  }, [weight, toleranceG, windowMs]);
+
+  const reset = () => {
+    samplesRef.current = [];
+    setLockedWeight(null);
+  };
+
+  return { lockedWeight, reset };
+}
+
+// Placeholder: ask the Pi to fire the camera once weight is locked.
+// Hits the same-origin /api/public/device/capture stub; the Pi will replace
+// this with its real capture pipeline.
+async function triggerDeviceCapture(weight: number) {
+  try {
+    await fetch("/api/public/device/capture-trigger", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ weight, requested_at: new Date().toISOString() }),
+      cache: "no-store",
+    });
+  } catch {
+    // best-effort placeholder; Pi pulls capture commands via its own channel
+  }
+}
+
 function useDeviceImage(onNew: (url: string) => void) {
   const [status, setStatus] = useState<"waiting" | "live" | "error">("waiting");
   const lastIdRef = useRef<string | null>(null);
@@ -304,6 +354,24 @@ function Dashboard() {
             ? "Unknown"
             : "Manual"
         : null;
+
+  // Weight stabilization → auto-trigger Pi capture once the weight is locked.
+  const { lockedWeight, reset: resetLock } = useStableWeight(liveWeight);
+  const lastTriggeredRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (lockedWeight == null) return;
+    if (capturedImage || meal) return; // already have a frame
+    if (lastTriggeredRef.current === lockedWeight) return;
+    lastTriggeredRef.current = lockedWeight;
+    triggerDeviceCapture(lockedWeight);
+  }, [lockedWeight, capturedImage, meal]);
+  useEffect(() => {
+    if (!capturedImage && !meal) {
+      lastTriggeredRef.current = null;
+      resetLock();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [capturedImage, meal]);
 
 
   return (
