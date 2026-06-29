@@ -355,6 +355,24 @@ function Dashboard() {
             : "Manual"
         : null;
 
+  // Weight stabilization → auto-trigger Pi capture once the weight is locked.
+  const { lockedWeight, reset: resetLock } = useStableWeight(liveWeight);
+  const lastTriggeredRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (lockedWeight == null) return;
+    if (capturedImage || meal) return; // already have a frame
+    if (lastTriggeredRef.current === lockedWeight) return;
+    lastTriggeredRef.current = lockedWeight;
+    triggerDeviceCapture(lockedWeight);
+  }, [lockedWeight, capturedImage, meal]);
+  useEffect(() => {
+    if (!capturedImage && !meal) {
+      lastTriggeredRef.current = null;
+      resetLock();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [capturedImage, meal]);
+
 
   return (
     <div className={showActionBar ? "space-y-5 pb-36" : "space-y-5"}>
