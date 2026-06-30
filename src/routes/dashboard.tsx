@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Camera,
@@ -12,8 +11,6 @@ import {
   Save,
   Loader2,
   Scale,
-  Flame,
-  Gauge,
   UtensilsCrossed,
   Dumbbell,
   Wheat,
