@@ -904,116 +904,12 @@ function RecentMeals() {
 }
 
 
-function CalorieRing({
-  pct,
-  consumed,
-  goal,
-}: {
-  pct: number;
-  consumed: number;
-  goal: number;
-}) {
-  const size = 168;
-  const stroke = 16;
-  const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
-  const offset = c - (pct / 100) * c;
-  const gradientId = "calorieRingGradient";
-
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      {/* glow */}
-      <div
-        className="absolute inset-2 rounded-full blur-2xl opacity-60"
-        style={{
-          background:
-            "radial-gradient(circle, color-mix(in oklab, var(--primary) 55%, transparent) 0%, transparent 70%)",
-        }}
-      />
-      <svg width={size} height={size} className="relative -rotate-90">
-        <defs>
-          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="var(--primary)" />
-            <stop offset="100%" stopColor="var(--success, var(--primary))" />
-          </linearGradient>
-        </defs>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          stroke="color-mix(in oklab, var(--primary) 10%, var(--secondary))"
-          strokeWidth={stroke}
-          fill="none"
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          stroke={`url(#${gradientId})`}
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={offset}
-          fill="none"
-          className="transition-[stroke-dashoffset] duration-700"
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <p className="text-3xl font-semibold tracking-tight tabular-nums">{consumed}</p>
-        <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          of {goal} kcal
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  unit,
-  tone,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: number | string;
-  unit: string;
-  tone: "primary" | "accent" | "sky" | "danger";
-}) {
-  const toneClasses = {
-    primary: "bg-primary/15 text-primary",
-    accent: "bg-accent/15 text-accent",
-    sky: "bg-chart-4/15 text-chart-4",
-    danger: "bg-destructive/15 text-destructive",
-  };
-
-  return (
-    <div
-      className="relative overflow-hidden rounded-2xl border border-white/50 bg-background/60 p-3 shadow-[0_10px_28px_-16px_rgba(16,80,40,0.25)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/55"
-    >
-      <div className="flex items-center gap-2">
-        <div className={`grid h-8 w-8 place-items-center rounded-xl ${toneClasses[tone]}`}>
-          <Icon className="h-4 w-4" />
-        </div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          {label}
-        </p>
-      </div>
-      <p className="mt-2 text-xl font-semibold leading-none tabular-nums">
-        {value}
-        <span className="ml-1 text-[11px] font-medium text-muted-foreground">{unit}</span>
-      </p>
-    </div>
-  );
-}
-
 const FOOD_TONES = [
-  { wrap: "bg-[color-mix(in_oklab,var(--chart-1)_14%,white)]", icon: "bg-chart-1/20 text-chart-1" },
-  { wrap: "bg-[color-mix(in_oklab,var(--chart-2)_14%,white)]", icon: "bg-chart-2/20 text-chart-2" },
-  { wrap: "bg-[color-mix(in_oklab,var(--chart-3)_14%,white)]", icon: "bg-chart-3/20 text-chart-3" },
-  { wrap: "bg-[color-mix(in_oklab,var(--chart-4)_14%,white)]", icon: "bg-chart-4/20 text-chart-4" },
-  { wrap: "bg-[color-mix(in_oklab,var(--chart-5)_14%,white)]", icon: "bg-chart-5/20 text-chart-5" },
+  { wrap: "bg-[color-mix(in_oklab,var(--chart-1)_14%,black)]", icon: "bg-chart-1/25 text-chart-1" },
+  { wrap: "bg-[color-mix(in_oklab,var(--chart-2)_14%,black)]", icon: "bg-chart-2/25 text-chart-2" },
+  { wrap: "bg-[color-mix(in_oklab,var(--chart-3)_14%,black)]", icon: "bg-chart-3/25 text-chart-3" },
+  { wrap: "bg-[color-mix(in_oklab,var(--chart-4)_14%,black)]", icon: "bg-chart-4/25 text-chart-4" },
+  { wrap: "bg-[color-mix(in_oklab,var(--chart-5)_14%,black)]", icon: "bg-chart-5/25 text-chart-5" },
 ];
 
 function FoodCard({
@@ -1026,14 +922,14 @@ function FoodCard({
   const tone = FOOD_TONES[index % FOOD_TONES.length];
   return (
     <div
-      className={`flex flex-col items-center gap-2 rounded-2xl ${tone.wrap} p-3 text-center shadow-[0_10px_24px_-14px_rgba(16,80,40,0.25)]`}
+      className={`flex flex-col items-center gap-2 rounded-2xl border border-white/10 ${tone.wrap} p-3 text-center backdrop-blur-xl`}
       data-testid="food-card"
     >
-      <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${tone.icon} shadow-sm`}>
-        <UtensilsCrossed className="h-5 w-5" />
+      <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${tone.icon}`}>
+        <UtensilsCrossed className="h-4 w-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold leading-tight">{food.name}</p>
+        <p className="truncate text-xs font-semibold leading-tight">{food.name}</p>
         <p className="mt-0.5 text-[10px] text-muted-foreground">
           {food.weight}g · {food.calories} kcal
         </p>
@@ -1057,9 +953,9 @@ function Macro({
 }) {
   const pct = Math.min(100, (value / goal) * 100);
   const fromMap = {
-    protein: "from-macro-protein/80 to-macro-protein",
-    carbs: "from-macro-carbs/80 to-macro-carbs",
-    fats: "from-macro-fats/80 to-macro-fats",
+    protein: "from-macro-protein/70 to-macro-protein",
+    carbs: "from-macro-carbs/70 to-macro-carbs",
+    fats: "from-macro-fats/70 to-macro-fats",
   };
   const textMap = {
     protein: "text-macro-protein",
@@ -1079,15 +975,15 @@ function Macro({
           <div className={`grid h-6 w-6 place-items-center rounded-lg ${bgTone[color]} ${textMap[color]}`}>
             <Icon className="h-3.5 w-3.5" />
           </div>
-          <span className="text-sm font-semibold">{label}</span>
+          <span className="text-xs font-semibold">{label}</span>
         </div>
-        <span className="text-[11px] text-muted-foreground tabular-nums">
-          <span className={`font-semibold ${textMap[color]}`}>{value}g</span> / {goal}g
+        <span className="text-[10px] text-muted-foreground tabular-nums">
+          <span className={`font-bold ${textMap[color]}`}>{value}g</span> / {goal}g
         </span>
       </div>
-      <div className="h-2.5 overflow-hidden rounded-full bg-secondary/70">
+      <div className="h-3 overflow-hidden rounded-full bg-white/[0.05]">
         <div
-          className={`h-full rounded-full bg-gradient-to-r ${fromMap[color]} transition-[width] duration-700`}
+          className={`h-full rounded-full bg-gradient-to-r ${fromMap[color]} shadow-[0_0_12px_-2px_currentColor] transition-[width] duration-700`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -1095,103 +991,3 @@ function Macro({
   );
 }
 
-function PhasePill({
-  phase,
-}: {
-  phase: "idle" | "connected" | "measuring" | "stabilizing" | "capturing" | "processing";
-}) {
-  const map = {
-    idle: { label: "Idle", dot: "bg-muted-foreground", text: "text-muted-foreground", bg: "bg-muted/60" },
-    connected: { label: "Connected", dot: "bg-primary", text: "text-primary", bg: "bg-primary/12" },
-    measuring: { label: "Measuring", dot: "bg-chart-4", text: "text-chart-4", bg: "bg-chart-4/12" },
-    stabilizing: { label: "Stabilizing", dot: "bg-accent", text: "text-accent", bg: "bg-accent/15" },
-    capturing: { label: "Capturing", dot: "bg-primary", text: "text-primary", bg: "bg-primary/15" },
-    processing: { label: "Processing", dot: "bg-accent", text: "text-accent", bg: "bg-accent/15" },
-  } as const;
-  const s = map[phase];
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full ${s.bg} px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${s.text}`}
-      data-testid="phase-pill"
-    >
-      <span className={`phase-dot inline-block h-1.5 w-1.5 rounded-full ${s.dot}`} />
-      {s.label}
-    </span>
-  );
-}
-
-function WeightHero({
-  display,
-  phase,
-  live,
-  locked,
-}: {
-  display: { value: number | string; unit: string };
-  phase: "idle" | "connected" | "measuring" | "stabilizing" | "capturing" | "processing";
-  live: number | null;
-  locked: number | null;
-}) {
-  const active = phase === "measuring" || phase === "stabilizing" || phase === "capturing";
-  return (
-    <div
-      className="relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/12 via-background to-accent/10 p-5 shadow-[0_20px_60px_-28px_rgba(40,130,75,0.55)]"
-      data-testid="weight-hero"
-    >
-      <div
-        className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full opacity-70 blur-3xl"
-        style={{
-          background:
-            "radial-gradient(circle, color-mix(in oklab, var(--primary) 35%, transparent), transparent 70%)",
-        }}
-      />
-      <div className="relative flex items-start justify-between">
-        <div className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-2xl bg-primary/15 text-primary shadow-sm">
-            <Scale className="h-4 w-4" />
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Live Weight
-            </p>
-            <p className="text-[11px] text-muted-foreground">
-              {locked != null
-                ? `Locked at ${locked}g`
-                : live != null
-                  ? "Streaming from device"
-                  : "Awaiting reading"}
-            </p>
-          </div>
-        </div>
-        {active && (
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
-          </span>
-        )}
-      </div>
-      <div className="relative mt-3 flex items-baseline gap-2">
-        <p className="text-5xl font-semibold leading-none tracking-tight tabular-nums text-foreground">
-          {display.value}
-        </p>
-        {display.unit && (
-          <span className="text-lg font-medium text-muted-foreground">{display.unit}</span>
-        )}
-      </div>
-      <div className="relative mt-4 h-1.5 overflow-hidden rounded-full bg-primary/10">
-        <div
-          className={`h-full rounded-full bg-gradient-to-r from-primary to-success transition-[width] duration-700 ${
-            phase === "stabilizing" ? "shimmer" : ""
-          }`}
-          style={{
-            width:
-              locked != null
-                ? "100%"
-                : typeof display.value === "number"
-                  ? `${Math.min(100, (display.value / 500) * 100)}%`
-                  : "12%",
-          }}
-        />
-      </div>
-    </div>
-  );
-}
