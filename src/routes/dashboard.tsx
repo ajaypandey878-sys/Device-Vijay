@@ -1,9 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Camera,
@@ -12,8 +11,6 @@ import {
   Save,
   Loader2,
   Scale,
-  Flame,
-  Gauge,
   UtensilsCrossed,
   Dumbbell,
   Wheat,
@@ -388,126 +385,80 @@ function Dashboard() {
   const confTone: "danger" | "warn" | "ok" =
     confidence >= 80 ? "ok" : confidence >= 50 ? "warn" : "danger";
 
+  // Stability percentage derived from phase for the mini-status card
+  const stabilityPct =
+    phase === "capturing" || phase === "processing"
+      ? 100
+      : phase === "stabilizing"
+        ? 65
+        : phase === "measuring"
+          ? 30
+          : 0;
+
   return (
-    <div className={showActionBar ? "space-y-5 pb-36" : "space-y-5"}>
-
-      {/* Smart Device Status */}
-      <div
-        className="flex items-center gap-3 rounded-2xl border border-white/50 bg-background/60 p-3.5 shadow-[0_10px_28px_-16px_rgba(16,80,40,0.25)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/55"
-        data-testid="device-status"
-      >
-        <div
-          className={`grid h-10 w-10 place-items-center rounded-xl ${
-            deviceConnected
-              ? "bg-primary/15 text-primary"
-              : deviceError
-                ? "bg-destructive/15 text-destructive"
-                : "bg-muted text-muted-foreground"
-          }`}
-        >
-          {deviceConnected ? (
-            <Radio className="h-5 w-5" />
-          ) : deviceError ? (
-            <WifiOff className="h-5 w-5" />
-          ) : (
-            <Wifi className="h-5 w-5" />
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold leading-tight">Smart Device Status</p>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">{statusText}</p>
-        </div>
-        <PhasePill phase={phase} />
-      </div>
-
-      {/* Hero: live weight */}
-      <WeightHero
-        display={weightDisplay}
+    <div className={showActionBar ? "space-y-4 pb-36" : "space-y-4 pb-4"}>
+      {/* 2. DEVICE STATUS — compact horizontal */}
+      <DeviceStatusBar
+        connected={deviceConnected}
+        error={deviceError}
+        statusText={statusText}
         phase={phase}
-        live={liveWeight}
-        locked={lockedWeight}
       />
 
-      {/* Edge-to-edge meal preview */}
-      <div className="-mx-4 md:-mx-6" data-testid="meal-preview">
-        <div className="overflow-hidden rounded-[20px] md:mx-0">
-          <div
-            className={`relative w-full bg-gradient-to-br from-secondary/70 via-muted/50 to-secondary/30 ${
-              previewSrc ? "glow-border" : ""
-            }`}
-            style={{ height: 220 }}
-          >
-            {previewSrc ? (
-              <>
-                <img
-                  src={previewSrc}
-                  alt="Captured meal"
-                  className="absolute inset-0 h-full w-full object-cover animate-fade-in"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
-                <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-background/85 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary shadow-sm backdrop-blur">
-                  <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-                  </span>
-                  {meal ? "Live" : (sourceBadge ?? "Captured")}
-                </span>
-                {capturedImage && !meal && (
-                  <button
-                    type="button"
-                    onClick={resetCapture}
-                    className="absolute right-3 top-3 rounded-full bg-background/85 px-3 py-1 text-[11px] font-semibold text-foreground shadow-sm backdrop-blur"
-                  >
-                    Retake
-                  </button>
-                )}
-              </>
-            ) : (
-              <>
-                <div className="shimmer absolute inset-0 opacity-60" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-                  <div className="grid h-16 w-16 place-items-center rounded-full bg-background/90 shadow-sm">
-                    <Camera className="h-7 w-7" />
-                  </div>
-                  <p className="text-sm font-medium">
-                    {phase === "stabilizing"
-                      ? "Stabilizing weight…"
-                      : phase === "capturing"
-                        ? "Capturing frame…"
-                        : "Capture or upload to begin"}
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* 3. CAMERA HERO — main focus */}
+      <CameraHero
+        previewSrc={previewSrc}
+        sourceBadge={sourceBadge}
+        meal={!!meal}
+        phase={phase}
+        onCapture={() => cameraInputRef.current?.click()}
+        onUpload={() => uploadInputRef.current?.click()}
+        onRetake={capturedImage && !meal ? resetCapture : null}
+      />
 
-      {/* Secondary stat cards (Weight is hero above) */}
+      {/* 4. WEIGHT CARD — secondary */}
+      <WeightCard display={weightDisplay} phase={phase} live={liveWeight} locked={lockedWeight} />
+
+      {/* 5. INSIGHT ROW — confidence + calories rings */}
       <div className="grid grid-cols-2 gap-3">
-        <StatCard icon={Flame} label="Calories" value={consumed} unit="kcal" tone="accent" />
-        <StatCard
-          icon={Gauge}
-          label="Confidence"
-          value={confidence}
-          unit="%"
-          tone={confTone === "ok" ? "primary" : confTone === "warn" ? "accent" : "danger"}
-        />
+        <ConfidenceCard value={confidence} />
+        <CaloriesCard value={consumed} goal={DAILY_GOAL} pct={ringPct} />
       </div>
 
-      {/* Persistent Daily Macros */}
-      <section className="space-y-3" data-testid="daily-macros">
-        <Card className="rounded-3xl border-0 shadow-[0_10px_36px_-18px_rgba(16,80,40,0.25)]">
-          <CardContent className="space-y-3.5 p-4">
-            <Macro label="Protein" value={meal?.protein ?? 0} goal={80} color="protein" icon={Dumbbell} />
-            <Macro label="Carbs" value={meal?.carbs ?? 0} goal={250} color="carbs" icon={Wheat} />
-            <Macro label="Fats" value={meal?.fats ?? 0} goal={70} color="fats" icon={Droplets} />
-          </CardContent>
-        </Card>
-      </section>
+      {/* 6. MINI STATUS ROW */}
+      <div className="grid grid-cols-2 gap-3">
+        <MiniStat label="Stability" value={`${stabilityPct}%`} accent="primary" />
+        <MiniStat label="Last Capture" value={meal || capturedImage ? "Just now" : "—"} accent="muted" />
+      </div>
 
+      {/* 7. MACRO CARD */}
+      <MacroPanel
+        protein={meal?.protein ?? 0}
+        carbs={meal?.carbs ?? 0}
+        fats={meal?.fats ?? 0}
+      />
 
-      {/* Hidden inputs for manual fallback */}
+      {/* 8. RECENT MEALS */}
+      <RecentMeals />
+
+      {/* Detected foods (only when meal active) */}
+      {meal && (
+        <section className="space-y-2.5" data-testid="detected-foods">
+          <div className="flex items-center justify-between px-1">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+              Detected foods
+            </p>
+            <span className="text-[10px] text-muted-foreground">{meal.foods.length} items</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2.5">
+            {meal.foods.map((food, i) => (
+              <FoodCard key={food.name} food={food} index={i} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Hidden inputs (manual fallback) */}
       <input
         ref={cameraInputRef}
         type="file"
@@ -530,58 +481,14 @@ function Dashboard() {
         }}
       />
 
-
-      {meal && (
-        <>
-          {/* Glowing calorie ring */}
-          <div className="flex flex-col items-center justify-center gap-2" data-testid="calorie-ring">
-            <CalorieRing pct={ringPct} consumed={consumed} goal={DAILY_GOAL} />
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Daily intake
-            </p>
-          </div>
-
-          {/* Detected food cards */}
-          <section className="space-y-2.5" data-testid="detected-foods">
-            <div className="flex items-center justify-between px-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Detected foods
-              </p>
-              <span className="text-[11px] text-muted-foreground">
-                {meal.foods.length} items
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {meal.foods.map((food, i) => (
-                <FoodCard key={food.name} food={food} index={i} />
-              ))}
-            </div>
-          </section>
-
-          {/* Smooth macro bars */}
-          <section className="space-y-3" data-testid="macro-bars">
-            <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Macros
-            </p>
-            <Card className="rounded-3xl border-0 shadow-[0_10px_36px_-18px_rgba(16,80,40,0.25)]">
-              <CardContent className="space-y-3.5 p-4">
-                <Macro label="Protein" value={meal.protein} goal={80} color="protein" icon={Dumbbell} />
-                <Macro label="Carbs" value={meal.carbs} goal={250} color="carbs" icon={Wheat} />
-                <Macro label="Fats" value={meal.fats} goal={70} color="fats" icon={Droplets} />
-              </CardContent>
-            </Card>
-          </section>
-        </>
-      )}
-
-      {/* Floating glassy action bar */}
+      {/* Floating action bar */}
       {showActionBar && (
-        <div className="fixed bottom-16 left-4 right-4 z-20 md:left-1/2 md:max-w-3xl md:-translate-x-1/2 md:px-6" data-testid="action-bar">
-          <div className="grid grid-cols-2 gap-2.5 rounded-3xl border border-white/40 bg-background/60 p-2 shadow-[0_20px_50px_-20px_rgba(16,80,40,0.45)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/55">
+        <div className="fixed bottom-24 left-4 right-4 z-20 mx-auto max-w-3xl" data-testid="action-bar">
+          <div className="grid grid-cols-2 gap-2.5 rounded-2xl border border-white/10 bg-background/70 p-2 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.7)] backdrop-blur-xl">
             <Button
               variant="outline"
               size="lg"
-              className="h-12 rounded-2xl border-primary/25 bg-background/80 text-foreground hover:bg-background"
+              className="h-12 rounded-xl border-white/10 bg-white/[0.03] text-foreground hover:bg-white/[0.06]"
             >
               <Pencil className="mr-2 h-4 w-4" />
               Correct
@@ -590,7 +497,7 @@ function Dashboard() {
               size="lg"
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending}
-              className="h-12 rounded-2xl text-sm font-semibold shadow-[0_14px_32px_-14px_rgba(40,130,75,0.7)]"
+              className="h-12 rounded-xl text-sm font-semibold shadow-[0_0_28px_-6px_color-mix(in_oklab,var(--primary)_70%,transparent)]"
             >
               {saveMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -602,151 +509,404 @@ function Dashboard() {
           </div>
         </div>
       )}
-
-      {/* Manual fallback */}
-      {!capturedImage && !meal && (
-        <section className="space-y-2 pt-2" data-testid="manual-fallback">
-          <div className="flex items-center gap-3 px-1">
-            <span className="h-px flex-1 bg-border" />
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Not using your device?
-            </p>
-            <span className="h-px flex-1 bg-border" />
-          </div>
-          <div className="grid grid-cols-2 gap-2.5">
-            <Button
-              variant="outline"
-              onClick={() => cameraInputRef.current?.click()}
-              className="h-10 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground"
-            >
-              <Camera className="mr-1.5 h-3.5 w-3.5" />
-              Capture manually
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => uploadInputRef.current?.click()}
-              className="h-10 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground"
-            >
-              <Upload className="mr-1.5 h-3.5 w-3.5" />
-              Upload image
-            </Button>
-          </div>
-        </section>
-      )}
     </div>
   );
 }
 
-function CalorieRing({
-  pct,
-  consumed,
-  goal,
-}: {
-  pct: number;
-  consumed: number;
-  goal: number;
-}) {
-  const size = 168;
-  const stroke = 16;
-  const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
-  const offset = c - (pct / 100) * c;
-  const gradientId = "calorieRingGradient";
+/* ------------- Sub-components ------------- */
 
+function DeviceStatusBar({
+  connected,
+  error,
+  statusText,
+  phase,
+}: {
+  connected: boolean;
+  error: boolean;
+  statusText: string;
+  phase: "idle" | "connected" | "measuring" | "stabilizing" | "capturing" | "processing";
+}) {
+  const steps: Array<{ key: typeof phase; label: string }> = [
+    { key: "measuring", label: "Measure" },
+    { key: "stabilizing", label: "Stabilize" },
+    { key: "capturing", label: "Capture" },
+    { key: "processing", label: "Process" },
+  ];
+  const activeIdx = steps.findIndex((s) => s.key === phase);
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      {/* glow */}
-      <div
-        className="absolute inset-2 rounded-full blur-2xl opacity-60"
-        style={{
-          background:
-            "radial-gradient(circle, color-mix(in oklab, var(--primary) 55%, transparent) 0%, transparent 70%)",
-        }}
-      />
-      <svg width={size} height={size} className="relative -rotate-90">
-        <defs>
-          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="var(--primary)" />
-            <stop offset="100%" stopColor="var(--success, var(--primary))" />
-          </linearGradient>
-        </defs>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          stroke="color-mix(in oklab, var(--primary) 10%, var(--secondary))"
-          strokeWidth={stroke}
-          fill="none"
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          stroke={`url(#${gradientId})`}
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={offset}
-          fill="none"
-          className="transition-[stroke-dashoffset] duration-700"
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <p className="text-3xl font-semibold tracking-tight tabular-nums">{consumed}</p>
-        <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          of {goal} kcal
-        </p>
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-xl">
+      <div className="flex items-center gap-2.5">
+        <div
+          className={`grid h-9 w-9 place-items-center rounded-xl ${
+            connected
+              ? "bg-primary/15 text-primary shadow-[0_0_20px_-4px_color-mix(in_oklab,var(--primary)_60%,transparent)]"
+              : error
+                ? "bg-destructive/15 text-destructive"
+                : "bg-white/[0.04] text-muted-foreground"
+          }`}
+        >
+          {connected ? <Radio className="h-4 w-4" /> : error ? <WifiOff className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[12px] font-semibold leading-tight">
+            {connected ? "Connected" : error ? "Offline" : "Waiting"}
+          </p>
+          <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{statusText}</p>
+        </div>
+      </div>
+      <div className="mt-3 flex items-center gap-1.5">
+        {steps.map((s, i) => {
+          const active = i === activeIdx;
+          const done = activeIdx > i;
+          return (
+            <div key={s.key} className="flex flex-1 items-center gap-1.5">
+              <div
+                className={`flex flex-1 items-center gap-1.5 rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-wider transition ${
+                  active
+                    ? "bg-primary/15 text-primary"
+                    : done
+                      ? "bg-primary/8 text-primary/70"
+                      : "bg-white/[0.03] text-muted-foreground"
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    active
+                      ? "bg-primary shadow-[0_0_8px_color-mix(in_oklab,var(--primary)_80%,transparent)] phase-dot"
+                      : done
+                        ? "bg-primary/60"
+                        : "bg-white/15"
+                  }`}
+                />
+                <span className="truncate">{s.label}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  unit,
-  tone,
+function CameraHero({
+  previewSrc,
+  sourceBadge,
+  meal,
+  phase,
+  onCapture,
+  onUpload,
+  onRetake,
 }: {
-  icon: React.ElementType;
-  label: string;
-  value: number | string;
-  unit: string;
-  tone: "primary" | "accent" | "sky" | "danger";
+  previewSrc: string | null;
+  sourceBadge: string | null;
+  meal: boolean;
+  phase: "idle" | "connected" | "measuring" | "stabilizing" | "capturing" | "processing";
+  onCapture: () => void;
+  onUpload: () => void;
+  onRetake: (() => void) | null;
 }) {
-  const toneClasses = {
-    primary: "bg-primary/15 text-primary",
-    accent: "bg-accent/15 text-accent",
-    sky: "bg-chart-4/15 text-chart-4",
-    danger: "bg-destructive/15 text-destructive",
-  };
+  return (
+    <div className="relative" data-testid="meal-preview">
+      {/* neon glow */}
+      <div className="pointer-events-none absolute -inset-px rounded-[26px] bg-gradient-to-br from-primary/40 via-primary/10 to-transparent opacity-60 blur-[2px]" />
+      <div className="relative overflow-hidden rounded-[24px] border border-primary/30 bg-black/60 shadow-[0_30px_80px_-30px_color-mix(in_oklab,var(--primary)_60%,transparent)]">
+        <div className="relative w-full" style={{ aspectRatio: "4 / 5" }}>
+          {previewSrc ? (
+            <>
+              <img src={previewSrc} alt="Captured meal" className="absolute inset-0 h-full w-full object-cover animate-fade-in" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/40" />
+            </>
+          ) : (
+            <>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,color-mix(in_oklab,var(--primary)_20%,transparent),transparent_60%),radial-gradient(circle_at_80%_80%,color-mix(in_oklab,var(--accent)_15%,transparent),transparent_60%)]" />
+              <div className="shimmer absolute inset-0 opacity-30" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                <div className="grid h-20 w-20 place-items-center rounded-full border border-primary/30 bg-primary/10 text-primary shadow-[0_0_30px_-6px_color-mix(in_oklab,var(--primary)_70%,transparent)]">
+                  <Camera className="h-8 w-8" />
+                </div>
+                <p className="text-xs font-medium uppercase tracking-[0.22em]">
+                  {phase === "stabilizing" ? "Stabilizing…" : phase === "capturing" ? "Capturing…" : "Awaiting Capture"}
+                </p>
+              </div>
+            </>
+          )}
 
+          {/* LIVE badge */}
+          <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.22em] text-primary backdrop-blur">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+            </span>
+            {meal ? "Live" : (sourceBadge ?? "Live Feed")}
+          </span>
+
+          {onRetake && (
+            <button
+              type="button"
+              onClick={onRetake}
+              className="absolute right-3 top-3 rounded-full border border-white/15 bg-black/55 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground backdrop-blur"
+            >
+              Retake
+            </button>
+          )}
+
+          {/* In-preview actions */}
+          <div className="absolute inset-x-3 bottom-3 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={onCapture}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/90 px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-[0_10px_30px_-10px_color-mix(in_oklab,var(--primary)_80%,transparent)] backdrop-blur transition hover:bg-primary"
+            >
+              <Camera className="h-3.5 w-3.5" />
+              Capture
+            </button>
+            <button
+              type="button"
+              onClick={onUpload}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-black/55 px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider text-foreground backdrop-blur transition hover:bg-black/70"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              Upload
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WeightCard({
+  display,
+  phase,
+  live,
+  locked,
+}: {
+  display: { value: number | string; unit: string };
+  phase: "idle" | "connected" | "measuring" | "stabilizing" | "capturing" | "processing";
+  live: number | null;
+  locked: number | null;
+}) {
+  const active = phase === "measuring" || phase === "stabilizing" || phase === "capturing";
+  // Sparkline: simple animated trend illustration
+  const points = "0,18 12,14 24,16 36,10 48,12 60,7 72,10 84,5 96,8";
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border border-white/50 bg-background/60 p-3 shadow-[0_10px_28px_-16px_rgba(16,80,40,0.25)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/55"
+      className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-primary/10 via-white/[0.02] to-transparent p-4 backdrop-blur-xl"
+      data-testid="weight-hero"
     >
-      <div className="flex items-center gap-2">
-        <div className={`grid h-8 w-8 place-items-center rounded-xl ${toneClasses[tone]}`}>
-          <Icon className="h-4 w-4" />
+      <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
+      <div className="relative flex items-start justify-between">
+        <div className="flex items-center gap-2">
+          <div className="grid h-8 w-8 place-items-center rounded-xl bg-primary/15 text-primary">
+            <Scale className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Live Weight</p>
+            <p className="text-[10px] text-muted-foreground">
+              {locked != null ? `Locked at ${locked}g` : live != null ? "Streaming" : "Awaiting reading"}
+            </p>
+          </div>
         </div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          {label}
-        </p>
+        {active && (
+          <span className="relative flex h-2 w-2 mt-1">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+          </span>
+        )}
       </div>
-      <p className="mt-2 text-xl font-semibold leading-none tabular-nums">
+      <div className="relative mt-2 flex items-end justify-between gap-3">
+        <div className="flex items-baseline gap-1.5">
+          <p className="text-4xl font-bold leading-none tracking-tight tabular-nums text-foreground">
+            {typeof display.value === "number" ? display.value : display.value === "Waiting..." ? "0" : display.value}
+          </p>
+          <span className="text-base font-medium text-muted-foreground">{display.unit || (typeof display.value === "number" ? "g" : "")}</span>
+        </div>
+        <svg viewBox="0 0 96 24" className="h-8 w-24 text-primary">
+          <polyline points={points} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
+          <polyline points={`${points} 96,24 0,24`} fill="currentColor" opacity="0.12" stroke="none" />
+        </svg>
+      </div>
+      <div className="relative mt-3 h-1 overflow-hidden rounded-full bg-white/[0.05]">
+        <div
+          className={`h-full rounded-full bg-gradient-to-r from-primary to-success transition-[width] duration-700 ${phase === "stabilizing" ? "shimmer" : ""}`}
+          style={{
+            width:
+              locked != null
+                ? "100%"
+                : typeof display.value === "number"
+                  ? `${Math.min(100, (display.value / 500) * 100)}%`
+                  : "8%",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function MiniRing({
+  value,
+  max,
+  label,
+  display,
+  gradient,
+  glowColor,
+}: {
+  value: number;
+  max: number;
+  label: string;
+  display: string;
+  gradient: { id: string; from: string; to: string };
+  glowColor: string;
+}) {
+  const size = 96;
+  const stroke = 9;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const pct = Math.min(100, (value / max) * 100);
+  const offset = c - (pct / 100) * c;
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-xl">
+      <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
+      <div className="mt-2 flex items-center justify-center">
+        <div className="relative" style={{ width: size, height: size }}>
+          <div
+            className="absolute inset-2 rounded-full opacity-50 blur-2xl"
+            style={{ background: `radial-gradient(circle, ${glowColor}, transparent 70%)` }}
+          />
+          <svg width={size} height={size} className="relative -rotate-90">
+            <defs>
+              <linearGradient id={gradient.id} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={gradient.from} />
+                <stop offset="100%" stopColor={gradient.to} />
+              </linearGradient>
+            </defs>
+            <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} fill="none" />
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={r}
+              stroke={`url(#${gradient.id})`}
+              strokeWidth={stroke}
+              strokeLinecap="round"
+              strokeDasharray={c}
+              strokeDashoffset={offset}
+              fill="none"
+              className="transition-[stroke-dashoffset] duration-700"
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <p className="text-base font-bold tabular-nums">{display}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfidenceCard({ value }: { value: number }) {
+  // gradient red→yellow→green based on value
+  const from = value >= 80 ? "#22c55e" : value >= 50 ? "#facc15" : "#ef4444";
+  const to = value >= 80 ? "#4ade80" : value >= 50 ? "#fb923c" : "#f87171";
+  return (
+    <MiniRing
+      value={value}
+      max={100}
+      label="Confidence"
+      display={`${value}%`}
+      gradient={{ id: "confGrad", from, to }}
+      glowColor={`color-mix(in oklab, ${from} 55%, transparent)`}
+    />
+  );
+}
+
+function CaloriesCard({ value, goal, pct }: { value: number; goal: number; pct: number }) {
+  return (
+    <MiniRing
+      value={pct}
+      max={100}
+      label="Calories"
+      display={`${value}`}
+      gradient={{ id: "calGrad", from: "#fb923c", to: "#f97316" }}
+      glowColor="color-mix(in oklab, #fb923c 55%, transparent)"
+    />
+  );
+}
+
+function MiniStat({ label, value, accent }: { label: string; value: string; accent: "primary" | "muted" }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-xl">
+      <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
+      <p className={`mt-1.5 text-lg font-bold tabular-nums ${accent === "primary" ? "text-primary" : "text-foreground"}`}>
         {value}
-        <span className="ml-1 text-[11px] font-medium text-muted-foreground">{unit}</span>
       </p>
     </div>
   );
 }
 
+function MacroPanel({ protein, carbs, fats }: { protein: number; carbs: number; fats: number }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl" data-testid="daily-macros">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Daily Macros</p>
+        <p className="text-[9px] text-muted-foreground">Updated live</p>
+      </div>
+      <div className="space-y-3.5">
+        <Macro label="Protein" value={protein} goal={80} color="protein" icon={Dumbbell} />
+        <Macro label="Carbs" value={carbs} goal={250} color="carbs" icon={Wheat} />
+        <Macro label="Fats" value={fats} goal={70} color="fats" icon={Droplets} />
+      </div>
+    </div>
+  );
+}
+
+const RECENT_PLACEHOLDER = [
+  { name: "Rice Bowl", weight: 245, confidence: 92, img: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&q=70" },
+  { name: "Dal Tadka", weight: 180, confidence: 88, img: "https://images.unsplash.com/photo-1626500155410-78cd17b3b69e?w=400&q=70" },
+  { name: "Salad", weight: 120, confidence: 76, img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=70" },
+  { name: "Paneer", weight: 90, confidence: 81, img: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&q=70" },
+];
+
+function RecentMeals() {
+  return (
+    <section className="space-y-2">
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Recent Meals</p>
+        <Link to="/history" className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+          View all
+        </Link>
+      </div>
+      <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-2.5 pb-1">
+          {RECENT_PLACEHOLDER.map((m) => (
+            <div
+              key={m.name}
+              className="w-32 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl"
+            >
+              <div className="relative h-20 w-full overflow-hidden bg-black/40">
+                <img src={m.img} alt={m.name} className="h-full w-full object-cover" loading="lazy" />
+                <span className="absolute right-1.5 top-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] font-bold text-primary backdrop-blur">
+                  {m.confidence}%
+                </span>
+              </div>
+              <div className="p-2">
+                <p className="truncate text-[11px] font-semibold">{m.name}</p>
+                <p className="text-[10px] text-muted-foreground">{m.weight}g</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
 const FOOD_TONES = [
-  { wrap: "bg-[color-mix(in_oklab,var(--chart-1)_14%,white)]", icon: "bg-chart-1/20 text-chart-1" },
-  { wrap: "bg-[color-mix(in_oklab,var(--chart-2)_14%,white)]", icon: "bg-chart-2/20 text-chart-2" },
-  { wrap: "bg-[color-mix(in_oklab,var(--chart-3)_14%,white)]", icon: "bg-chart-3/20 text-chart-3" },
-  { wrap: "bg-[color-mix(in_oklab,var(--chart-4)_14%,white)]", icon: "bg-chart-4/20 text-chart-4" },
-  { wrap: "bg-[color-mix(in_oklab,var(--chart-5)_14%,white)]", icon: "bg-chart-5/20 text-chart-5" },
+  { wrap: "bg-[color-mix(in_oklab,var(--chart-1)_14%,black)]", icon: "bg-chart-1/25 text-chart-1" },
+  { wrap: "bg-[color-mix(in_oklab,var(--chart-2)_14%,black)]", icon: "bg-chart-2/25 text-chart-2" },
+  { wrap: "bg-[color-mix(in_oklab,var(--chart-3)_14%,black)]", icon: "bg-chart-3/25 text-chart-3" },
+  { wrap: "bg-[color-mix(in_oklab,var(--chart-4)_14%,black)]", icon: "bg-chart-4/25 text-chart-4" },
+  { wrap: "bg-[color-mix(in_oklab,var(--chart-5)_14%,black)]", icon: "bg-chart-5/25 text-chart-5" },
 ];
 
 function FoodCard({
@@ -759,14 +919,14 @@ function FoodCard({
   const tone = FOOD_TONES[index % FOOD_TONES.length];
   return (
     <div
-      className={`flex flex-col items-center gap-2 rounded-2xl ${tone.wrap} p-3 text-center shadow-[0_10px_24px_-14px_rgba(16,80,40,0.25)]`}
+      className={`flex flex-col items-center gap-2 rounded-2xl border border-white/10 ${tone.wrap} p-3 text-center backdrop-blur-xl`}
       data-testid="food-card"
     >
-      <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${tone.icon} shadow-sm`}>
-        <UtensilsCrossed className="h-5 w-5" />
+      <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${tone.icon}`}>
+        <UtensilsCrossed className="h-4 w-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold leading-tight">{food.name}</p>
+        <p className="truncate text-xs font-semibold leading-tight">{food.name}</p>
         <p className="mt-0.5 text-[10px] text-muted-foreground">
           {food.weight}g · {food.calories} kcal
         </p>
@@ -790,9 +950,9 @@ function Macro({
 }) {
   const pct = Math.min(100, (value / goal) * 100);
   const fromMap = {
-    protein: "from-macro-protein/80 to-macro-protein",
-    carbs: "from-macro-carbs/80 to-macro-carbs",
-    fats: "from-macro-fats/80 to-macro-fats",
+    protein: "from-macro-protein/70 to-macro-protein",
+    carbs: "from-macro-carbs/70 to-macro-carbs",
+    fats: "from-macro-fats/70 to-macro-fats",
   };
   const textMap = {
     protein: "text-macro-protein",
@@ -812,15 +972,15 @@ function Macro({
           <div className={`grid h-6 w-6 place-items-center rounded-lg ${bgTone[color]} ${textMap[color]}`}>
             <Icon className="h-3.5 w-3.5" />
           </div>
-          <span className="text-sm font-semibold">{label}</span>
+          <span className="text-xs font-semibold">{label}</span>
         </div>
-        <span className="text-[11px] text-muted-foreground tabular-nums">
-          <span className={`font-semibold ${textMap[color]}`}>{value}g</span> / {goal}g
+        <span className="text-[10px] text-muted-foreground tabular-nums">
+          <span className={`font-bold ${textMap[color]}`}>{value}g</span> / {goal}g
         </span>
       </div>
-      <div className="h-2.5 overflow-hidden rounded-full bg-secondary/70">
+      <div className="h-3 overflow-hidden rounded-full bg-white/[0.05]">
         <div
-          className={`h-full rounded-full bg-gradient-to-r ${fromMap[color]} transition-[width] duration-700`}
+          className={`h-full rounded-full bg-gradient-to-r ${fromMap[color]} shadow-[0_0_12px_-2px_currentColor] transition-[width] duration-700`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -828,103 +988,3 @@ function Macro({
   );
 }
 
-function PhasePill({
-  phase,
-}: {
-  phase: "idle" | "connected" | "measuring" | "stabilizing" | "capturing" | "processing";
-}) {
-  const map = {
-    idle: { label: "Idle", dot: "bg-muted-foreground", text: "text-muted-foreground", bg: "bg-muted/60" },
-    connected: { label: "Connected", dot: "bg-primary", text: "text-primary", bg: "bg-primary/12" },
-    measuring: { label: "Measuring", dot: "bg-chart-4", text: "text-chart-4", bg: "bg-chart-4/12" },
-    stabilizing: { label: "Stabilizing", dot: "bg-accent", text: "text-accent", bg: "bg-accent/15" },
-    capturing: { label: "Capturing", dot: "bg-primary", text: "text-primary", bg: "bg-primary/15" },
-    processing: { label: "Processing", dot: "bg-accent", text: "text-accent", bg: "bg-accent/15" },
-  } as const;
-  const s = map[phase];
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full ${s.bg} px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${s.text}`}
-      data-testid="phase-pill"
-    >
-      <span className={`phase-dot inline-block h-1.5 w-1.5 rounded-full ${s.dot}`} />
-      {s.label}
-    </span>
-  );
-}
-
-function WeightHero({
-  display,
-  phase,
-  live,
-  locked,
-}: {
-  display: { value: number | string; unit: string };
-  phase: "idle" | "connected" | "measuring" | "stabilizing" | "capturing" | "processing";
-  live: number | null;
-  locked: number | null;
-}) {
-  const active = phase === "measuring" || phase === "stabilizing" || phase === "capturing";
-  return (
-    <div
-      className="relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/12 via-background to-accent/10 p-5 shadow-[0_20px_60px_-28px_rgba(40,130,75,0.55)]"
-      data-testid="weight-hero"
-    >
-      <div
-        className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full opacity-70 blur-3xl"
-        style={{
-          background:
-            "radial-gradient(circle, color-mix(in oklab, var(--primary) 35%, transparent), transparent 70%)",
-        }}
-      />
-      <div className="relative flex items-start justify-between">
-        <div className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-2xl bg-primary/15 text-primary shadow-sm">
-            <Scale className="h-4 w-4" />
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Live Weight
-            </p>
-            <p className="text-[11px] text-muted-foreground">
-              {locked != null
-                ? `Locked at ${locked}g`
-                : live != null
-                  ? "Streaming from device"
-                  : "Awaiting reading"}
-            </p>
-          </div>
-        </div>
-        {active && (
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
-          </span>
-        )}
-      </div>
-      <div className="relative mt-3 flex items-baseline gap-2">
-        <p className="text-5xl font-semibold leading-none tracking-tight tabular-nums text-foreground">
-          {display.value}
-        </p>
-        {display.unit && (
-          <span className="text-lg font-medium text-muted-foreground">{display.unit}</span>
-        )}
-      </div>
-      <div className="relative mt-4 h-1.5 overflow-hidden rounded-full bg-primary/10">
-        <div
-          className={`h-full rounded-full bg-gradient-to-r from-primary to-success transition-[width] duration-700 ${
-            phase === "stabilizing" ? "shimmer" : ""
-          }`}
-          style={{
-            width:
-              locked != null
-                ? "100%"
-                : typeof display.value === "number"
-                  ? `${Math.min(100, (display.value / 500) * 100)}%`
-                  : "12%",
-          }}
-        />
-      </div>
-    </div>
-  );
-}
