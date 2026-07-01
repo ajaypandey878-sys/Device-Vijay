@@ -334,7 +334,8 @@ function Dashboard() {
     return { value: "Waiting...", unit: "" };
   })();
   const consumed = meal?.total_calories ?? 0;
-  const ringPct = Math.min(100, (consumed / DAILY_GOAL) * 100);
+  const dailyGoal = targets.kcal || DAILY_GOAL;
+  const ringPct = Math.min(100, (consumed / dailyGoal) * 100);
   const confidence = meal?.confidence ?? 0;
   const canSave = !!(meal || capturedImage);
   const showActionBar = canSave;
