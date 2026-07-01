@@ -197,6 +197,16 @@ function useDeviceImage(onNew: (url: string) => void) {
 }
 
 function Dashboard() {
+  const navigate = useNavigate();
+  const profile = useProfile();
+  const targets = useTargets();
+  useEffect(() => {
+    // gate: send new users to onboarding
+    if (typeof window !== "undefined" && !window.localStorage.getItem("ashoma.profile.v1")) {
+      navigate({ to: "/onboarding", replace: true });
+    }
+  }, [navigate]);
+
   const [meal, setMeal] = useState<typeof MOCK_LIVE | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [captureSource, setCaptureSource] = useState<"device" | "manual" | null>(null);
