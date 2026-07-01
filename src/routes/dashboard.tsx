@@ -198,7 +198,7 @@ function useDeviceImage(onNew: (url: string) => void) {
 
 function Dashboard() {
   const navigate = useNavigate();
-  const profile = useProfile();
+  useProfile();
   const targets = useTargets();
   useEffect(() => {
     // gate: send new users to onboarding
