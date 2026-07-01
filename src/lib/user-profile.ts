@@ -55,23 +55,34 @@ export function computeTargets(p: UserProfile): Targets {
 const listeners = new Set<() => void>();
 function emit() { listeners.forEach((l) => l()); }
 
+let cached: UserProfile | null = null;
+let cachedRaw: string | null = null;
+
 function read(): UserProfile | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as UserProfile) : null;
+    if (raw === cachedRaw) return cached;
+    cachedRaw = raw;
+    cached = raw ? (JSON.parse(raw) as UserProfile) : null;
+    return cached;
   } catch { return null; }
 }
 
 export function saveProfile(p: Omit<UserProfile, "createdAt"> & Partial<Pick<UserProfile, "createdAt">>) {
   const full: UserProfile = { createdAt: new Date().toISOString(), ...p };
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(full));
+  const raw = JSON.stringify(full);
+  window.localStorage.setItem(STORAGE_KEY, raw);
+  cachedRaw = raw;
+  cached = full;
   emit();
   return full;
 }
 
 export function clearProfile() {
   window.localStorage.removeItem(STORAGE_KEY);
+  cachedRaw = null;
+  cached = null;
   emit();
 }
 
@@ -83,12 +94,13 @@ export function useProfile(): UserProfile | null {
   );
 }
 
+const DEFAULT_TARGETS: Targets = { kcal: 2000, proteinG: 80, carbsG: 250, fatsG: 70 };
+
 export function useTargets(): Targets {
   const p = useProfile();
-  const [t, setT] = useState<Targets>({ kcal: 2000, proteinG: 80, carbsG: 250, fatsG: 70 });
-  useEffect(() => { if (p) setT(computeTargets(p)); }, [p]);
-  return t;
+  return useMemo(() => (p ? computeTargets(p) : DEFAULT_TARGETS), [p]);
 }
+
 
 export function insightFor(goal: Goal | undefined, consumed: number, protein: number, targets: Targets): string {
   const remaining = Math.max(0, targets.kcal - consumed);
