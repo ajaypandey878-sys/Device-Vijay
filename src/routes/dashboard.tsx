@@ -435,8 +435,11 @@ function Dashboard() {
       {/* 5. INSIGHT ROW — confidence + calories rings */}
       <div className="grid grid-cols-2 gap-3">
         <ConfidenceCard value={confidence} />
-        <CaloriesCard value={consumed} goal={DAILY_GOAL} pct={ringPct} />
+        <CaloriesCard value={consumed} goal={dailyGoal} pct={ringPct} />
       </div>
+
+      {/* Personalized insight based on goal */}
+      <InsightCard consumed={consumed} protein={meal?.protein ?? 0} />
 
       {/* 6. MINI STATUS ROW */}
       <div className="grid grid-cols-2 gap-3">
