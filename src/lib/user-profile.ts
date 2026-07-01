@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 
 export type Goal = "lose" | "gain" | "maintain" | "healthier";
 export type Gender = "male" | "female" | "other";
