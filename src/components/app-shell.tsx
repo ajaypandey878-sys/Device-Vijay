@@ -1,13 +1,14 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, History, User, Settings2 } from "lucide-react";
+import { LayoutDashboard, History, User, Settings2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
 const nav = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/dashboard", label: "Home", icon: LayoutDashboard },
   { to: "/history", label: "History", icon: History },
+  { to: "/insights", label: "Insights", icon: Sparkles },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
@@ -51,8 +52,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <main className="mx-auto max-w-3xl px-4 py-4">{children}</main>
 
-      <nav className="fixed inset-x-0 bottom-3 z-30 mx-auto max-w-sm px-4">
-        <div className="grid grid-cols-3 rounded-2xl border border-white/10 bg-background/70 p-1.5 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.7)] backdrop-blur-xl">
+      <nav className="fixed inset-x-0 bottom-3 z-30 mx-auto max-w-md px-4">
+        <div className="grid grid-cols-4 rounded-2xl border border-white/10 bg-background/70 p-1.5 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.7)] backdrop-blur-xl">
           {nav.map(({ to, label, icon: Icon }) => {
             const active = pathname === to || pathname.startsWith(to + "/");
             return (

@@ -1,5 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { useProfile, useTargets } from "@/lib/user-profile";
+import { InsightCard } from "@/components/insight-card";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -195,6 +197,16 @@ function useDeviceImage(onNew: (url: string) => void) {
 }
 
 function Dashboard() {
+  const navigate = useNavigate();
+  useProfile();
+  const targets = useTargets();
+  useEffect(() => {
+    // gate: send new users to onboarding
+    if (typeof window !== "undefined" && !window.localStorage.getItem("ashoma.profile.v1")) {
+      navigate({ to: "/onboarding", replace: true });
+    }
+  }, [navigate]);
+
   const [meal, setMeal] = useState<typeof MOCK_LIVE | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [captureSource, setCaptureSource] = useState<"device" | "manual" | null>(null);
@@ -322,7 +334,8 @@ function Dashboard() {
     return { value: "Waiting...", unit: "" };
   })();
   const consumed = meal?.total_calories ?? 0;
-  const ringPct = Math.min(100, (consumed / DAILY_GOAL) * 100);
+  const dailyGoal = targets.kcal || DAILY_GOAL;
+  const ringPct = Math.min(100, (consumed / dailyGoal) * 100);
   const confidence = meal?.confidence ?? 0;
   const canSave = !!(meal || capturedImage);
   const showActionBar = canSave;
@@ -422,8 +435,11 @@ function Dashboard() {
       {/* 5. INSIGHT ROW — confidence + calories rings */}
       <div className="grid grid-cols-2 gap-3">
         <ConfidenceCard value={confidence} />
-        <CaloriesCard value={consumed} goal={DAILY_GOAL} pct={ringPct} />
+        <CaloriesCard value={consumed} goal={dailyGoal} pct={ringPct} />
       </div>
+
+      {/* Personalized insight based on goal */}
+      <InsightCard consumed={consumed} protein={meal?.protein ?? 0} />
 
       {/* 6. MINI STATUS ROW */}
       <div className="grid grid-cols-2 gap-3">

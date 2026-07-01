@@ -1,19 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listDevices, createDevice, deleteDevice } from "@/lib/devices.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Copy, Plus, Trash2, KeyRound } from "lucide-react";
+import { Copy, Plus, Trash2, KeyRound, Target, Activity, Cpu, Bell, Shield, Download, HelpCircle, MessageSquare, LogOut, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
+import { clearProfile, goalMeta, useProfile, useTargets } from "@/lib/user-profile";
 
 export const Route = createFileRoute("/profile")({
   ssr: false,
@@ -23,7 +23,12 @@ export const Route = createFileRoute("/profile")({
 });
 
 function Profile() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [email, setEmail] = useState<string>("");
+  const profile = useProfile();
+  const targets = useTargets();
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
   }, []);
@@ -34,38 +39,153 @@ function Profile() {
     queryFn: () => fetchDevices({}),
   });
 
+  async function signOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/login", replace: true });
+  }
+
+  const meta = profile ? goalMeta(profile.goal) : null;
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
-        <p className="text-sm text-muted-foreground">Your account and AshoMa devices.</p>
+    <div className="space-y-4 pb-4">
+      {/* Identity */}
+      <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-primary/15 via-white/[0.02] to-transparent p-4 backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/20 text-lg font-black text-primary">
+            {(email[0] ?? "A").toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{email || "—"}</p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              {meta ? `${meta.emoji} ${meta.label}` : "No goal set"}
+            </p>
+          </div>
+          <Link to="/onboarding" className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+            Edit
+          </Link>
+        </div>
       </div>
 
-      <Card><CardContent className="p-5">
-        <h2 className="font-semibold">Account</h2>
-        <div className="mt-3 text-sm">
-          <span className="text-muted-foreground">Email:</span> <span className="font-medium">{email || "—"}</span>
+      {/* Targets */}
+      <Section title="Your Targets" icon={<Target className="h-4 w-4 text-primary" />}>
+        <div className="grid grid-cols-2 gap-2">
+          <TargetTile label="Daily Calories" value={`${targets.kcal}`} suffix="kcal" />
+          <TargetTile label="Protein" value={`${targets.proteinG}`} suffix="g" />
+          <TargetTile label="Carbs" value={`${targets.carbsG}`} suffix="g" />
+          <TargetTile label="Fats" value={`${targets.fatsG}`} suffix="g" />
         </div>
-      </CardContent></Card>
+      </Section>
 
-      <Card><CardContent className="p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h2 className="font-semibold">AshoMa devices</h2>
-            <p className="text-sm text-muted-foreground">Each Raspberry Pi uses a device token to upload meals.</p>
+      {/* Profile facts */}
+      {profile && (
+        <Section title="About You" icon={<Activity className="h-4 w-4 text-primary" />}>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <Fact label="Age" value={`${profile.age}`} />
+            <Fact label="Weight" value={`${profile.weightKg} kg`} />
+            <Fact label="Height" value={`${profile.heightCm} cm`} />
+            <Fact label="Gender" value={profile.gender} />
+            <Fact label="Activity" value={profile.activity} />
+            <Fact label="Goal" value={goalMeta(profile.goal).label} />
           </div>
-          <NewDeviceDialog />
-        </div>
+        </Section>
+      )}
 
+      {/* Devices */}
+      <Section title="Devices" icon={<Cpu className="h-4 w-4 text-primary" />} action={<NewDeviceDialog />}>
         <div className="space-y-2">
-          {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+          {isLoading && <p className="text-xs text-muted-foreground">Loading…</p>}
           {!isLoading && (devices ?? []).length === 0 && (
-            <p className="text-sm text-muted-foreground">No devices yet. Add your first one to get a token.</p>
+            <p className="text-xs text-muted-foreground">No devices yet. Add your first one to get a token.</p>
           )}
           {(devices ?? []).map((d) => <DeviceRow key={d.id} device={d} />)}
         </div>
-      </CardContent></Card>
+      </Section>
+
+      {/* Preferences (placeholders) */}
+      <Section title="Preferences" icon={<Bell className="h-4 w-4 text-primary" />}>
+        <div className="divide-y divide-white/[0.06]">
+          <SettingRow label="Meal preferences" hint="Cuisines and defaults" />
+          <SettingRow label="Allergies" hint="Foods to warn about" />
+          <SettingRow label="Dietary restrictions" hint="Vegetarian, vegan, etc." />
+          <SettingRow label="Notifications" hint="Meal reminders" />
+        </div>
+      </Section>
+
+      <Section title="Data & Privacy" icon={<Shield className="h-4 w-4 text-primary" />}>
+        <div className="divide-y divide-white/[0.06]">
+          <SettingRow label="Data export" icon={<Download className="h-3.5 w-3.5" />} />
+          <SettingRow label="Privacy settings" icon={<Shield className="h-3.5 w-3.5" />} />
+          <SettingRow label="Subscription" hint="Free plan" />
+        </div>
+      </Section>
+
+      <Section title="Support" icon={<HelpCircle className="h-4 w-4 text-primary" />}>
+        <div className="divide-y divide-white/[0.06]">
+          <SettingRow label="FAQ" icon={<HelpCircle className="h-3.5 w-3.5" />} />
+          <SettingRow label="Contact support" icon={<MessageSquare className="h-3.5 w-3.5" />} />
+          <SettingRow label="Feedback" icon={<MessageSquare className="h-3.5 w-3.5" />} />
+        </div>
+      </Section>
+
+      <button
+        onClick={() => { clearProfile(); signOut(); }}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive transition hover:bg-destructive/15"
+      >
+        <LogOut className="h-4 w-4" /> Logout
+      </button>
     </div>
+  );
+}
+
+function Section({ title, icon, action, children }: { title: string; icon: React.ReactNode; action?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {icon}
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">{title}</p>
+        </div>
+        {action}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function TargetTile({ label, value, suffix }: { label: string; value: string; suffix: string }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/30 p-3">
+      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
+      <p className="mt-1 text-lg font-bold tabular-nums">
+        {value}<span className="ml-1 text-xs font-medium text-muted-foreground">{suffix}</span>
+      </p>
+    </div>
+  );
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/20 p-2">
+      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
+      <p className="mt-0.5 truncate text-xs font-semibold capitalize">{value}</p>
+    </div>
+  );
+}
+
+function SettingRow({ label, hint, icon }: { label: string; hint?: string; icon?: React.ReactNode }) {
+  return (
+    <button className="flex w-full items-center justify-between gap-3 py-3 text-left transition hover:opacity-80">
+      <div className="flex items-center gap-2.5">
+        {icon && <span className="text-muted-foreground">{icon}</span>}
+        <div>
+          <p className="text-sm font-medium">{label}</p>
+          {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+        </div>
+      </div>
+      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+    </button>
   );
 }
 
@@ -78,12 +198,12 @@ function DeviceRow({ device }: { device: any }) {
     onError: (e: any) => toast.error(e.message),
   });
   return (
-    <div className="flex items-center justify-between rounded-lg border p-3">
+    <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-3">
       <div className="min-w-0">
-        <p className="truncate font-medium">{device.name}</p>
-        <p className="text-xs text-muted-foreground">
+        <p className="truncate text-sm font-semibold">{device.name}</p>
+        <p className="text-[10px] text-muted-foreground">
           <code>{device.token_prefix}…</code>
-          {device.last_seen_at ? ` • last seen ${formatDistanceToNow(new Date(device.last_seen_at), { addSuffix: true })}` : " • never connected"}
+          {device.last_seen_at ? ` · ${formatDistanceToNow(new Date(device.last_seen_at), { addSuffix: true })}` : " · never connected"}
         </p>
       </div>
       <Button size="sm" variant="ghost" onClick={() => { if (confirm("Remove this device?")) mutation.mutate(); }}>
@@ -110,7 +230,9 @@ function NewDeviceDialog() {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); else setOpen(v); }}>
-      <Button onClick={() => setOpen(true)}><Plus className="mr-1 h-4 w-4" /> Add device</Button>
+      <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1 rounded-xl border border-primary/40 bg-primary/15 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+        <Plus className="h-3.5 w-3.5" /> Add
+      </button>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{token ? "Save your device token" : "Add an AshoMa"}</DialogTitle>
