@@ -29,6 +29,7 @@ function Profile() {
   const [email, setEmail] = useState<string>("");
   const profile = useProfile();
   const targets = useTargets();
+  const [panel, setPanel] = useState<PanelKey | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
