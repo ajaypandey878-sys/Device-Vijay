@@ -105,29 +105,29 @@ function Profile() {
         </div>
       </Section>
 
-      {/* Preferences (placeholders) */}
+      {/* Preferences */}
       <Section title="Preferences" icon={<Bell className="h-4 w-4 text-primary" />}>
         <div className="divide-y divide-white/[0.06]">
-          <SettingRow label="Meal preferences" hint="Cuisines and defaults" />
-          <SettingRow label="Allergies" hint="Foods to warn about" />
-          <SettingRow label="Dietary restrictions" hint="Vegetarian, vegan, etc." />
-          <SettingRow label="Notifications" hint="Meal reminders" />
+          <SettingRow label="Meal preferences" hint="Cuisines and defaults" onClick={() => setPanel("meal_prefs")} />
+          <SettingRow label="Allergies" hint="Foods to warn about" onClick={() => setPanel("allergies")} />
+          <SettingRow label="Dietary restrictions" hint="Vegetarian, vegan, etc." onClick={() => setPanel("restrictions")} />
+          <SettingRow label="Notifications" hint="Meal reminders" onClick={() => setPanel("notifications")} />
         </div>
       </Section>
 
       <Section title="Data & Privacy" icon={<Shield className="h-4 w-4 text-primary" />}>
         <div className="divide-y divide-white/[0.06]">
-          <SettingRow label="Data export" icon={<Download className="h-3.5 w-3.5" />} />
-          <SettingRow label="Privacy settings" icon={<Shield className="h-3.5 w-3.5" />} />
-          <SettingRow label="Subscription" hint="Free plan" />
+          <SettingRow label="Data export" icon={<Download className="h-3.5 w-3.5" />} onClick={() => setPanel("export")} />
+          <SettingRow label="Privacy settings" icon={<Shield className="h-3.5 w-3.5" />} onClick={() => setPanel("privacy")} />
+          <SettingRow label="Subscription" hint="Free plan" onClick={() => setPanel("subscription")} />
         </div>
       </Section>
 
       <Section title="Support" icon={<HelpCircle className="h-4 w-4 text-primary" />}>
         <div className="divide-y divide-white/[0.06]">
-          <SettingRow label="FAQ" icon={<HelpCircle className="h-3.5 w-3.5" />} />
-          <SettingRow label="Contact support" icon={<MessageSquare className="h-3.5 w-3.5" />} />
-          <SettingRow label="Feedback" icon={<MessageSquare className="h-3.5 w-3.5" />} />
+          <SettingRow label="Help center" icon={<HelpCircle className="h-3.5 w-3.5" />} onClick={() => setPanel("help")} />
+          <SettingRow label="Contact support" icon={<MessageSquare className="h-3.5 w-3.5" />} onClick={() => setPanel("support")} />
+          <SettingRow label="Feedback" icon={<MessageSquare className="h-3.5 w-3.5" />} onClick={() => setPanel("feedback")} />
         </div>
       </Section>
 
@@ -137,6 +137,8 @@ function Profile() {
       >
         <LogOut className="h-4 w-4" /> Logout
       </button>
+
+      <SettingsPanel panel={panel} onClose={() => setPanel(null)} />
     </div>
   );
 }
