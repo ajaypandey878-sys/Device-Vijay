@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
 import { clearProfile, goalMeta, useProfile, useTargets } from "@/lib/user-profile";
+import { SettingsPanel, type PanelKey } from "@/components/settings-panel";
 
 export const Route = createFileRoute("/profile")({
   ssr: false,
@@ -28,6 +29,7 @@ function Profile() {
   const [email, setEmail] = useState<string>("");
   const profile = useProfile();
   const targets = useTargets();
+  const [panel, setPanel] = useState<PanelKey | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
@@ -103,29 +105,29 @@ function Profile() {
         </div>
       </Section>
 
-      {/* Preferences (placeholders) */}
+      {/* Preferences */}
       <Section title="Preferences" icon={<Bell className="h-4 w-4 text-primary" />}>
         <div className="divide-y divide-white/[0.06]">
-          <SettingRow label="Meal preferences" hint="Cuisines and defaults" />
-          <SettingRow label="Allergies" hint="Foods to warn about" />
-          <SettingRow label="Dietary restrictions" hint="Vegetarian, vegan, etc." />
-          <SettingRow label="Notifications" hint="Meal reminders" />
+          <SettingRow label="Meal preferences" hint="Cuisines and defaults" onClick={() => setPanel("meal_prefs")} />
+          <SettingRow label="Allergies" hint="Foods to warn about" onClick={() => setPanel("allergies")} />
+          <SettingRow label="Dietary restrictions" hint="Vegetarian, vegan, etc." onClick={() => setPanel("restrictions")} />
+          <SettingRow label="Notifications" hint="Meal reminders" onClick={() => setPanel("notifications")} />
         </div>
       </Section>
 
       <Section title="Data & Privacy" icon={<Shield className="h-4 w-4 text-primary" />}>
         <div className="divide-y divide-white/[0.06]">
-          <SettingRow label="Data export" icon={<Download className="h-3.5 w-3.5" />} />
-          <SettingRow label="Privacy settings" icon={<Shield className="h-3.5 w-3.5" />} />
-          <SettingRow label="Subscription" hint="Free plan" />
+          <SettingRow label="Data export" icon={<Download className="h-3.5 w-3.5" />} onClick={() => setPanel("export")} />
+          <SettingRow label="Privacy settings" icon={<Shield className="h-3.5 w-3.5" />} onClick={() => setPanel("privacy")} />
+          <SettingRow label="Subscription" hint="Free plan" onClick={() => setPanel("subscription")} />
         </div>
       </Section>
 
       <Section title="Support" icon={<HelpCircle className="h-4 w-4 text-primary" />}>
         <div className="divide-y divide-white/[0.06]">
-          <SettingRow label="FAQ" icon={<HelpCircle className="h-3.5 w-3.5" />} />
-          <SettingRow label="Contact support" icon={<MessageSquare className="h-3.5 w-3.5" />} />
-          <SettingRow label="Feedback" icon={<MessageSquare className="h-3.5 w-3.5" />} />
+          <SettingRow label="Help center" icon={<HelpCircle className="h-3.5 w-3.5" />} onClick={() => setPanel("help")} />
+          <SettingRow label="Contact support" icon={<MessageSquare className="h-3.5 w-3.5" />} onClick={() => setPanel("support")} />
+          <SettingRow label="Feedback" icon={<MessageSquare className="h-3.5 w-3.5" />} onClick={() => setPanel("feedback")} />
         </div>
       </Section>
 
@@ -135,6 +137,8 @@ function Profile() {
       >
         <LogOut className="h-4 w-4" /> Logout
       </button>
+
+      <SettingsPanel panel={panel} onClose={() => setPanel(null)} />
     </div>
   );
 }
@@ -174,9 +178,9 @@ function Fact({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SettingRow({ label, hint, icon }: { label: string; hint?: string; icon?: React.ReactNode }) {
+function SettingRow({ label, hint, icon, onClick }: { label: string; hint?: string; icon?: React.ReactNode; onClick?: () => void }) {
   return (
-    <button className="flex w-full items-center justify-between gap-3 py-3 text-left transition hover:opacity-80">
+    <button onClick={onClick} className="flex w-full items-center justify-between gap-3 py-3 text-left transition hover:opacity-80">
       <div className="flex items-center gap-2.5">
         {icon && <span className="text-muted-foreground">{icon}</span>}
         <div>
