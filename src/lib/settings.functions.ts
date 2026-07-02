@@ -28,10 +28,13 @@ export const updateSettings = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const patch: Record<string, unknown> = { user_id: context.userId, [data.section]: data.value };
+    const patch = { user_id: context.userId, [data.section]: data.value } as {
+      user_id: string;
+      meal_prefs?: unknown; allergies?: unknown; restrictions?: unknown; notifications?: unknown; privacy?: unknown;
+    };
     const { error } = await context.supabase
       .from("user_settings")
-      .upsert(patch, { onConflict: "user_id" });
+      .upsert(patch as never, { onConflict: "user_id" });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
