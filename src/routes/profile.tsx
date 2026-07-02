@@ -178,9 +178,9 @@ function Fact({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SettingRow({ label, hint, icon }: { label: string; hint?: string; icon?: React.ReactNode }) {
+function SettingRow({ label, hint, icon, onClick }: { label: string; hint?: string; icon?: React.ReactNode; onClick?: () => void }) {
   return (
-    <button className="flex w-full items-center justify-between gap-3 py-3 text-left transition hover:opacity-80">
+    <button onClick={onClick} className="flex w-full items-center justify-between gap-3 py-3 text-left transition hover:opacity-80">
       <div className="flex items-center gap-2.5">
         {icon && <span className="text-muted-foreground">{icon}</span>}
         <div>
