@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { AppShell, requireAuthBeforeLoad } from "@/components/app-shell";
 import { clearProfile, goalMeta, useProfile, useTargets } from "@/lib/user-profile";
+import { SettingsPanel, type PanelKey } from "@/components/settings-panel";
 
 export const Route = createFileRoute("/profile")({
   ssr: false,
