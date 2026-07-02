@@ -47,6 +47,30 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          rating: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          rating: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          rating?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       meal_corrections: {
         Row: {
           corrected_label: string | null
@@ -260,6 +284,69 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+        }
+        Relationships: []
+      }
+      support_requests: {
+        Row: {
+          contact_email: string | null
+          created_at: string
+          id: string
+          message: string
+          status: string
+          subject: string
+          user_id: string
+        }
+        Insert: {
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          status?: string
+          subject: string
+          user_id: string
+        }
+        Update: {
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          status?: string
+          subject?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          allergies: Json
+          created_at: string
+          meal_prefs: Json
+          notifications: Json
+          privacy: Json
+          restrictions: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allergies?: Json
+          created_at?: string
+          meal_prefs?: Json
+          notifications?: Json
+          privacy?: Json
+          restrictions?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allergies?: Json
+          created_at?: string
+          meal_prefs?: Json
+          notifications?: Json
+          privacy?: Json
+          restrictions?: Json
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
